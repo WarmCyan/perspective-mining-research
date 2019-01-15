@@ -5,14 +5,19 @@ data:
 	mkdir data
 
 
-external: external/Unsupervised-Aspect-Extraction external/Unsupervised-Aspect-Extraction-Py3
+external: external/Unsupervised-Aspect-Extraction 
+
+# This is commented out because it's outdated (original author's version, but
+# python 2
+#external/Unsupervised-Aspect-Extraction:
+	#git clone https://github.com/ruidan/Unsupervised-Aspect-Extraction external/Unsupervised-Aspect-Extraction
 
 external/Unsupervised-Aspect-Extraction:
-	git clone https://github.com/ruidan/Unsupervised-Aspect-Extraction external/Unsupervised-Aspect-Extraction
-
-external/Unsupervised-Aspect-Extraction-Py3:
-	git clone https://github.com/harpaj/Unsupervised-Aspect-Extraction external/Unsupervised-Aspect-Extraction-Py3
-	virtualenv -p python3.6 external/Unsupervised-Aspect-Extraction-Py3
+	git clone https://github.com/harpaj/Unsupervised-Aspect-Extraction external/Unsupervised-Aspect-Extraction
+	virtualenv -p python3.6 external/Unsupervised-Aspect-Extraction
+	cd external/Unsupervised-Aspect-Extraction && \
+		. bin/activate && \
+		pip install -r requirements.txt
 
 
 datalocs: dataloc/kaggle1
