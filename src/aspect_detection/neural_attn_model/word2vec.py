@@ -91,6 +91,15 @@ parser.add_argument(
     help="Number of epochs (default=2)",
 )
 
+args = parser.parse_args()
 sentences = Sentences(args.input_path)
-model = gensim.models.Word2Vec(sentences, size=args.embed_dim, window=args.window, min_count=args.min_count, workers=args.workers, sg=1, iter=args.epochs)
+model = gensim.models.Word2Vec(
+    sentences,
+    size=args.embed_dim,
+    window=args.window,
+    min_count=args.min_count,
+    workers=args.workers,
+    sg=1,
+    iter=args.epochs,
+)
 model.save(args.output_path)
