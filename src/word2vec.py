@@ -2,9 +2,7 @@
 
 # code drawn in part from https://github.com/harpaj/Unsupervised-Aspect-Extraction
 
-"""This script takes a file of input data and outputs a word2vec model.
-
-The input file is expected to be a sentences file, where each line is its own sentence."""
+"""This script takes a file of input data and outputs a word2vec model."""
 
 import argparse
 import codecs
@@ -49,8 +47,8 @@ def run(
             logging.debug("Overwrite requested, continuing...")
             logging.warning("Overwriting an existing model output!")
         else:
-            logging.debug("No overwrite requested, skip step...")
-            return
+            logging.debug("No overwrite requested, skipping word2vec model building...")
+            exit()
 
     logging.info("Running word2vec on %s, outputting to %s...", input_path, output_path)
 
@@ -158,7 +156,7 @@ def parse():
 
 
 if __name__ == "__main__":
-    logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
+    logging.basicConfig(format="%(asctime)s : %(levelname)s : %(message)s", level=logging.DEBUG)
 
     ARGS = parse()
     run(
