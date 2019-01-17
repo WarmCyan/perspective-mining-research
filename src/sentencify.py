@@ -63,3 +63,45 @@ def sentencify(input_folder, output_path, count=-1, overwrite=False):
     with open(output_path, 'w') as file_out:
         for sentence in sentences:
             file_out.write("{0}\n".format(sentence))
+
+
+def parse():
+    """Handle all command line argument parsing.
+
+    Returns the parsed args object from the parser
+    """
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument(
+        "-o",
+        "--output",
+        dest="output_path",
+        type=str,
+        required=True,
+        metavar="<str>",
+        help="The name and path for the output sentence data",
+    )
+    parser.add_argument(
+        "-i",
+        "--input",
+        dest="input_folder",
+        type=str,
+        required=True,
+        metavar="<str>",
+        help="The path to the folder containing the kaggle1 raw input data",
+    )
+    parser.add_argument(
+        "--overwrite",
+        dest="overwrite",
+        action="store_true",
+        help="Specify this flag to overwrite existing output data if they exist",
+    )
+
+    cmd_args = parser.parse_args()
+    return cmd_args
+
+if __name__ == "__main__":
+    logging.basicConfig(format="%(asctime)s : %(levelname)s : %(message)s", level=logging.INFO)
+
+    ARGS = parse()
+    sentencify(ARGS.input_folder, ARGS.output_path, ARGS.overwrite)
