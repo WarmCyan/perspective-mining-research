@@ -1,3 +1,8 @@
+fix:
+	black --line-length 100 src
+	pylint src
+
+
 data/raw: data
 	mkdir data/raw
 
@@ -33,4 +38,4 @@ data/raw/kaggle1: data/raw
 	unzip ./data/raw/all-the-news.zip -d data/raw/kaggle1
 	rm data/raw/all-the-news.zip
 
-.PHONY: external getdata dataloc/kaggle1 datalocs
+.PHONY: external getdata dataloc/kaggle1 datalocs fix
