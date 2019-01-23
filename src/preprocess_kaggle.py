@@ -14,6 +14,7 @@ import pandas as pd
 from sklearn.feature_extraction.text import CountVectorizer
 from nltk.corpus import stopwords
 from nltk.stem.wordnet import WordNetLemmatizer
+from progress.bar import IncrementalBar
 
 import utility
 
@@ -31,7 +32,7 @@ def parse_doc(doc):
 def preprocess(input_folder, output_path, overwrite=False):
     """Run the preprocess process on all documents in dataset."""
 
-    logging.info("Preprocessing requested for kaggle1 dataset at %s", output_path)
+    logging.info("Preprocessing requested for kaggle1 dataset at '%s'", output_path)
 
     # check if output file already exists
     if not utility.check_output_necessary(output_path, overwrite):
@@ -55,11 +56,17 @@ def preprocess(input_folder, output_path, overwrite=False):
 
     out = codecs.open(output_path, 'w', 'utf-8')
 
+    logging.info("Parsing...")
+    bar = IncrementalBar("Parsing", max=len(article_table.index))
     for article in article_table.content:
-        tokens = parse_doc(article.content)
+        tokens = parse_doc(article)
         if len(tokens) > 0:
             out.write(' '.join(tokens) + '\n')
         out.write(" \n")
+        bar.next()
+    bar.finish()
+
+    logging.info("Preprocessing completed, output at '%s'", output_path)
 
 
 def parse():

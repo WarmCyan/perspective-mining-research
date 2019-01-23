@@ -63,6 +63,8 @@ def run(
     )
     model.save(output_path)
 
+    logging.info("Word2Vec model saved to '%s'", output_path)
+
 
 def parse():
     """Handle all command line argument parsing.

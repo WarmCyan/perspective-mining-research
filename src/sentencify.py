@@ -21,7 +21,7 @@ def sentencify(input_folder, output_path, count=-1, overwrite=False):
     Input_folder assumes no trailling /
     """
 
-    logging.info("Sentence data requested for kaggle1 dataset at %s...", output_path)
+    logging.info("Sentence data requested for kaggle1 dataset at '%s'...", output_path)
 
     # check to see if the output path already exists
     if not utility.check_output_necessary(output_path, overwrite):
@@ -52,10 +52,12 @@ def sentencify(input_folder, output_path, count=-1, overwrite=False):
         sentences = sentences[:count]
 
     # write out the file
-    logging.info("Saving sentence data to %s", output_path)
+    logging.info("Saving sentence data to '%s'", output_path)
     with open(output_path, 'w') as file_out:
         for sentence in sentences:
             file_out.write("{0}\n".format(sentence))
+
+    logging.info("Sentence data saved to '%s'", output_path)
 
 
 def parse():
