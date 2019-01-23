@@ -19,6 +19,8 @@ logger = logging.getLogger(__name__)
 parser = argparse.ArgumentParser()
 parser.add_argument("-o", "--out-dir", dest="out_dir_path", type=str, metavar='<str>', required=True,
                     help="The path to the output directory")
+parser.add_argument("-i", "--input-file", dest="input_path", type=str, metavar='<str>', required=True,
+                    help="The path to the input file of preprocessed training data")
 parser.add_argument("-e", "--embdim", dest="emb_dim", type=int, metavar='<int>', default=200,
                     help="Embeddings dimension (default=200)")
 parser.add_argument("-b", "--batch-size", dest="batch_size", type=int, metavar='<int>', default=50,
@@ -37,13 +39,13 @@ parser.add_argument("--maxlen", dest="maxlen", type=int, metavar='<int>', defaul
 parser.add_argument("--seed", dest="seed", type=int, metavar='<int>', default=1234, help="Random seed (default=1234)")
 parser.add_argument("-a", "--algorithm", dest="algorithm", type=str, metavar='<str>', default='adam',
                     help="Optimization algorithm (rmsprop|sgd|adagrad|adadelta|adam|adamax) (default=adam)")
-parser.add_argument("--domain", dest="domain", type=str, metavar='<str>', default='restaurant',
-                    help="domain of the corpus {restaurant, beer}")
+#parser.add_argument("--domain", dest="domain", type=str, metavar='<str>', default='restaurant',
+                    #help="domain of the corpus {restaurant, beer}")
 parser.add_argument("--ortho-reg", dest="ortho_reg", type=float, metavar='<float>', default=0.1,
                     help="The weight of orthogonol regularizaiton (default=0.1)")
 
 args = parser.parse_args()
-out_dir = args.out_dir_path + '/' + args.domain
+out_dir = args.out_dir_path
 U.mkdir_p(out_dir)
 U.print_args(args)
 
@@ -60,10 +62,11 @@ if args.seed > 0:
 from keras.preprocessing import sequence
 import reader as dataset
 
-vocab, train_x, test_x, overall_maxlen = dataset.get_data(args.domain, vocab_size=args.vocab_size, maxlen=args.maxlen)
+#vocab, train_x, test_x, overall_maxlen = dataset.get_data(args.domain, vocab_size=args.vocab_size, maxlen=args.maxlen)
+vocab, train_x, overall_maxlen = dataset.get_data(args.input_path, args.out_dir_path, vocab_size=args.vocab_size, maxlen=args.maxlen)
 
 train_x = sequence.pad_sequences(train_x, maxlen=overall_maxlen)
-test_x = sequence.pad_sequences(test_x, maxlen=overall_maxlen)
+#test_x = sequence.pad_sequences(test_x, maxlen=overall_maxlen)
 
 print('Number of training examples: ', len(train_x))
 print('Length of vocab: ', len(vocab))

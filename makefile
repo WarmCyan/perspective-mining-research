@@ -2,6 +2,8 @@ fix:
 	black --line-length 100 src
 	pylint src
 
+data/cache: data
+	mkdir data/cache
 
 data/raw: data
 	mkdir data/raw
