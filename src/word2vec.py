@@ -11,6 +11,8 @@ import os.path
 
 import gensim
 
+import utility
+
 
 class Sentences:
     """Class with an iterator for running through every line in an input file."""
@@ -35,22 +37,13 @@ def run(
 ):
     """The primary function for generating the word2vec model."""
 
-    logging.info("Word2vec model requested for input %s, output %s", input_path, output_path)
+    logging.info("Word2vec model requested for input '%s', output '%s'", input_path, output_path)
 
     # check to see if the output path already exists
-    logging.debug("Checking for existence of %s...", output_path)
-    if os.path.isfile(output_path):
-        logging.debug("Output model file already exists.")
+    if not utility.check_output_necessary(output_path, overwrite):
+        return
 
-        # check if should overwite the existing output or not
-        if overwrite:
-            logging.debug("Overwrite requested, continuing...")
-            logging.warning("Overwriting an existing model output!")
-        else:
-            logging.debug("No overwrite requested, skipping word2vec model building...")
-            exit()
-
-    logging.info("Running word2vec on %s, outputting to %s...", input_path, output_path)
+    logging.info("Running word2vec on '%s', outputting to '%s'...", input_path, output_path)
 
     # convert input
     logging.debug("Converting input into sentences...")

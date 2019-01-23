@@ -1,31 +1,46 @@
 #!/usr/bin/env python
 
-"""Creates sentences for Word2Vec out of an input csv file."""
+"""Runs kaggle1 dataset through preprocessing steps."""
 
-# NOTE: this script is designed for the kaggle1 dataset
-# (it's specific preprocessing for that dataset, so it should probably go somewhere else
+# NOTE: this is only for kaggle1, this should probably go somewhere else eventually
 
 import argparse
 import os.path
 import logging
 
+import codecs
+import nltk
 import pandas as pd
+from sklearn.feature_extraction.text import CountVectorizer
+from nltk.corpus import stopwords
+from nltk.stem.wordnet import WordNetLemmatizer
 
 import utility
 
 
-def sentencify(input_folder, output_path, count=-1, overwrite=False):
-    """Create a file of sentences from the 3 csv files.
+def parse_doc(doc):
+    """Tokenizes, lemmatizes, strips stop words, etc."""
+    lmtzr = WordNetLemmatizer()
+    stop = stopwords.words('english')
+    text_token = CountVectorizer().build_tokenizer()(doc.lower())
+    text_rmstop = [i for i in text_token if i not in stop]
+    text_stem = [lmtzr.lemmatize(w) for w in text_rmstop]
+    return text_stem
 
-    A count of -1 means output _all_ sentences.
-    Input_folder assumes no trailling /
-    """
 
-    logging.info("Sentence data requested for kaggle1 dataset at %s...", output_path)
+def preprocess(input_folder, output_path, overwrite=False):
+    """Run the preprocess process on all documents in dataset."""
 
-    # check to see if the output path already exists
+    logging.info("Preprocessing requested for kaggle1 dataset at %s", output_path)
+
+    # check if output file already exists
     if not utility.check_output_necessary(output_path, overwrite):
         return
+
+    # ensure nltk datasets are present
+    logging.debug("Ensuring nltk sets...")
+    nltk.download("stopwords")
+    nltk.download("wordnet")
 
     # load the data
     logging.info("Loading article data...")
@@ -38,24 +53,13 @@ def sentencify(input_folder, output_path, count=-1, overwrite=False):
 
     article_table = pd.concat([article_table1, article_table2, article_table3])
 
-    # split every sentence from every article on '.'
-    logging.info("Splitting articles...")
-    sentences = []
+    out = codecs.open(output_path, 'w', 'utf-8')
+
     for article in article_table.content:
-        if count != 0 and len(sentences) > count:
-            break
-
-        sentences.extend(article.split("."))
-
-    # chop down to size as needed
-    if count != 0 and len(sentences) > count:
-        sentences = sentences[:count]
-
-    # write out the file
-    logging.info("Saving sentence data to %s", output_path)
-    with open(output_path, 'w') as file_out:
-        for sentence in sentences:
-            file_out.write("{0}\n".format(sentence))
+        tokens = parse_doc(article.content)
+        if len(tokens) > 0:
+            out.write(' '.join(tokens) + '\n')
+        out.write(" \n")
 
 
 def parse():
@@ -93,8 +97,9 @@ def parse():
     cmd_args = parser.parse_args()
     return cmd_args
 
+
 if __name__ == "__main__":
     logging.basicConfig(format="%(asctime)s : %(levelname)s : %(message)s", level=logging.INFO)
 
     ARGS = parse()
-    sentencify(ARGS.input_folder, ARGS.output_path, ARGS.overwrite)
+    preprocess(ARGS.input_folder, ARGS.output_path, ARGS.overwrite)
