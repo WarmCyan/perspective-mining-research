@@ -40,4 +40,11 @@ data/raw/kaggle1: data/raw
 	unzip ./data/raw/all-the-news.zip -d data/raw/kaggle1
 	rm data/raw/all-the-news.zip
 
-.PHONY: external getdata dataloc/kaggle1 datalocs fix
+env:
+	virtualenv -p python3.6 src/aspect_detection/neural_attn_model
+	cd src/aspect_detection/neural_attn_model && \
+		. bin/activate && \
+		pip install -r requirements.txt
+	
+
+.PHONY: external getdata dataloc/kaggle1 datalocs fix env
