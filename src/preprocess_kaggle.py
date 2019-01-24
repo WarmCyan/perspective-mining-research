@@ -29,7 +29,7 @@ def parse_doc(doc):
     return text_stem
 
 
-def preprocess(input_folder, output_path, overwrite=False):
+def preprocess(input_folder, output_path, count=-1, overwrite=False):
     """Run the preprocess process on all documents in dataset."""
 
     logging.info("Preprocessing requested for kaggle1 dataset at '%s'", output_path)
@@ -58,7 +58,12 @@ def preprocess(input_folder, output_path, overwrite=False):
 
     logging.info("Parsing...")
     bar = IncrementalBar("Parsing", max=len(article_table.index))
+    counter = 0
     for article in article_table.content:
+        if count >= 0 and counter == count:
+            break
+        counter += 1
+        
         tokens = parse_doc(article)
         if len(tokens) > 0:
             out.write(' '.join(tokens) + '\n')
@@ -100,6 +105,16 @@ def parse():
         action="store_true",
         help="Specify this flag to overwrite existing output data if they exist",
     )
+    parser.add_argument(
+        "-c",
+        "--count",
+        dest="count",
+        type=int,
+        required=True,
+        default=-1,
+        metavar="<int>",
+        help="The number of articles to handle",
+    )
 
     cmd_args = parser.parse_args()
     return cmd_args
@@ -109,4 +124,4 @@ if __name__ == "__main__":
     logging.basicConfig(format="%(asctime)s : %(levelname)s : %(message)s", level=logging.INFO)
 
     ARGS = parse()
-    preprocess(ARGS.input_folder, ARGS.output_path, ARGS.overwrite)
+    preprocess(ARGS.input_folder, ARGS.output_path, ARGS.count, ARGS.overwrite)

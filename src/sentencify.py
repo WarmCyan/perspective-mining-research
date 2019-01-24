@@ -42,13 +42,13 @@ def sentencify(input_folder, output_path, count=-1, overwrite=False):
     logging.info("Splitting articles...")
     sentences = []
     for article in article_table.content:
-        if count != 0 and len(sentences) > count:
+        if count != -1 and len(sentences) > count:
             break
 
         sentences.extend(article.split("."))
 
     # chop down to size as needed
-    if count != 0 and len(sentences) > count:
+    if count != -1 and len(sentences) > count:
         sentences = sentences[:count]
 
     # write out the file
@@ -91,6 +91,16 @@ def parse():
         action="store_true",
         help="Specify this flag to overwrite existing output data if they exist",
     )
+    parser.add_argument(
+        "-c",
+        "--count",
+        dest="count",
+        type=int,
+        required=True,
+        default=-1,
+        metavar="<int>",
+        help="The number of sentences to use",
+    )
 
     cmd_args = parser.parse_args()
     return cmd_args
@@ -99,4 +109,4 @@ if __name__ == "__main__":
     logging.basicConfig(format="%(asctime)s : %(levelname)s : %(message)s", level=logging.INFO)
 
     ARGS = parse()
-    sentencify(ARGS.input_folder, ARGS.output_path, ARGS.overwrite)
+    sentencify(ARGS.input_folder, ARGS.output_path, ARGS.count, ARGS.overwrite)
