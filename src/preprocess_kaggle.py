@@ -19,11 +19,11 @@ from progress.bar import IncrementalBar
 import utility
 
 
-def parse_doc(doc):
+def parse_sentence(sentence):
     """Tokenizes, lemmatizes, strips stop words, etc."""
     lmtzr = WordNetLemmatizer()
     stop = stopwords.words('english')
-    text_token = CountVectorizer().build_tokenizer()(doc.lower())
+    text_token = CountVectorizer().build_tokenizer()(sentence.lower())
     text_rmstop = [i for i in text_token if i not in stop]
     text_stem = [lmtzr.lemmatize(w) for w in text_rmstop]
     return text_stem
@@ -63,11 +63,13 @@ def preprocess(input_folder, output_path, count=-1, overwrite=False):
         if count >= 0 and counter == count:
             break
         counter += 1
-        
-        tokens = parse_doc(article)
-        if len(tokens) > 0:
-            out.write(' '.join(tokens) + '\n')
-        out.write(" \n")
+
+        # get the sentences from this article
+        for sentence in article.split("."):
+            tokens = parse_sentence(sentence)
+            if len(tokens) > 0:
+                out.write(' '.join(tokens) + '\n')
+            out.write(" \n")
         bar.next()
     bar.finish()
 
