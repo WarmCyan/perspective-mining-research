@@ -96,7 +96,7 @@ def parse():
         "--count",
         dest="count",
         type=int,
-        required=True,
+        required=False,
         default=-1,
         metavar="<int>",
         help="The number of sentences to use",
