@@ -1,5 +1,5 @@
 
-
+import nltk
 
 
 # NOTE: conceptually coming from "An unsupervised aspect detection model for sentiment analysis of reviews"
@@ -12,6 +12,8 @@ def top_aspects(sentences):
     # for each sentence
     for sentence in sentences:
         # use POS tagging
+        words = nltk.word_tokenize(sentence)
+        pos = nltk.pos_tag(words)
 
         #Extract POS tag patterns as candidates for aspects
         pass
