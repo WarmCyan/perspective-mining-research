@@ -1,6 +1,9 @@
+#!/bin/python3
 import nltk
 import logging
 import itertools
+import json
+import argparse
 
 from tqdm import tqdm
 
@@ -10,8 +13,18 @@ aspect_data = {}
 
 
 def detect(input_file, count=-1, overwrite=False):
-    #logging.info("
-    pass
+    global aspect_data
+    logging.info("Aspect detection requested on document set '%s'...", input_file)
+
+    with open(input_file, 'r') as infile:
+        docs = json.load(infile)
+
+    if count > 0: docs = docs[0:count]
+    
+    pos_sentences, sentences = tokenize(docs)
+    find_aspects(pos_sentences)
+
+    print(aspect_data)
 
 
 # take in a list of documents, and turn into POS sentences
@@ -38,14 +51,16 @@ def generate_patterns():
     for i in range(1, 4):
         for pattern in itertools.product(["NN", "NNS"], repeat=i):
             build = ["JJ"]
-            patterns.append(build.extend(pattern))
+            build.extend(pattern)
+            patterns.append(build)
 
-    patterns.append("DT", "JJ")
+    patterns.append(["DT", "JJ"])
     
     for i in range(1, 3):
         for pattern in itertools.product(["NN", "NNS", "VBG"], repeat=i):
             build = ["DT"]
-            patterns.append(build.extend(pattern))
+            build.extend(pattern)
+            patterns.append(pattern)
     
     return patterns
 
@@ -64,7 +79,7 @@ def find_aspects(pos_sentences):
 
         for pattern in patterns:
             detect_sentence_aspects(pos_sentence, pattern, index, True)
-        
+
         index += 1
 
 def stringify_pos(pos):
@@ -96,7 +111,7 @@ def detect_sentence_aspects(pos_sentence, pattern, sentence_index, order_matters
                     break
                 i += 1
         else:
-            for part in pos_sentence[index, index + count]:
+            for part in pos_sentence[index:index + count]:
                 if part[1] not in pattern:
                     found = False
                     break
@@ -110,3 +125,54 @@ def detect_sentence_aspects(pos_sentence, pattern, sentence_index, order_matters
             else:
                 aspect_data[string_aspect]["count"] += 1
                 aspect_data[string_aspect]["sentences"].append(sentence_index)
+
+def parse():
+    """Handle all command line argument parsing.
+
+    Returns the parsed args object from the parser
+    """
+    parser = argparse.ArgumentParser()
+
+    #parser.add_argument(
+    #    "-o",
+    #    "--output",
+    #    dest="output_path",
+    #    type=str,
+    #    required=True,
+    #    metavar="<str>",
+    #    help="The name and path for the output sentence data",
+    #)
+    parser.add_argument(
+        "-i",
+        "--input",
+        dest="input_file",
+        type=str,
+        required=True,
+        metavar="<str>",
+        help="The path to the json file containing the input documents",
+    )
+    parser.add_argument(
+        "--overwrite",
+        dest="overwrite",
+        action="store_true",
+        help="Specify this flag to overwrite existing output data if they exist",
+    )
+    parser.add_argument(
+        "-c",
+        "--count",
+        dest="count",
+        type=int,
+        required=False,
+        default=-1,
+        metavar="<int>",
+        help="The number of sentences to use",
+    )
+
+    cmd_args = parser.parse_args()
+    return cmd_args
+
+if __name__ == "__main__":
+    logging.basicConfig(format="%(asctime)s : %(levelname)s : %(message)s", level=logging.INFO)
+
+    ARGS = parse()
+    detect(ARGS.input_file, ARGS.count, ARGS.overwrite)
