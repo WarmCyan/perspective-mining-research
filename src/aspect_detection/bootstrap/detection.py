@@ -26,9 +26,15 @@ def detect(input_file, count=-1, overwrite=False):
 
     pos_sentences, sentences = tokenize(docs)
     generate_candidates(pos_sentences)
-    print(aspect_data)
     compute_flr(pos_sentences)
 
+    #print(aspect_data)
+
+    # testing just what's top and what isn't
+    sorted_aspects = sorted(aspect_data, key = lambda x: aspect_data[x]["flr"])
+    for thing in sorted_aspects:
+        yep = aspect_data[thing]
+        print(yep["pos"], yep["flr"])
 
 
 # take in a list of documents, and turn into POS sentences
@@ -42,8 +48,10 @@ def tokenize(docs):
 
     logging.info("Tokenizing sentences...")
     for sentence in tqdm(sentences):
-        tokenized = nltk.word_tokenize(sentence)
-        tagged = nltk.pos_tag(tokenized)
+        # pos tagger
+        words = nltk.word_tokenize(sentence)
+        words = [word.lower() for word in words if word.isalpha() and word is not "s"]
+        tagged = nltk.pos_tag(words)
         pos_sentences.append(tagged)
 
     return pos_sentences, sentences
@@ -116,7 +124,7 @@ def detect_sentence_aspects(pos_sentence, pattern, sentence_index, order_matters
                     found = False
                     break
                 i += 1
-        
+
         # this is for detecting any combinations of word types in pattern of "count" size
         else:
             # check each word in the sentence from index to maximum pattern size
