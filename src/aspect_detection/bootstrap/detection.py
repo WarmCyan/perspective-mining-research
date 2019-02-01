@@ -10,6 +10,7 @@ from tqdm import tqdm
 
 import flr
 import util
+import ascore
 
 # NOTE: conceptually coming from "An unsupervised aspect detection model for sentiment analysis of reviews"
 
@@ -29,14 +30,15 @@ def detect(input_file, count=-1, overwrite=False):
     generate_candidates(pos_sentences)
     prune_stopword_candidates()
     compute_flr(pos_sentences)
+    compute_a_score(pos_sentences)
 
     #print(aspect_data)
 
     # testing just what's top and what isn't
-    sorted_aspects = sorted(aspect_data, key = lambda x: aspect_data[x]["flr"])
+    sorted_aspects = sorted(aspect_data, key = lambda x: aspect_data[x]["ascore"])
     for thing in sorted_aspects:
         yep = aspect_data[thing]
-        print(yep["pos"], yep["flr"])
+        print(yep["pos"], yep["ascore"])
 
 
 # take in a list of documents, and turn into POS sentences
@@ -174,7 +176,16 @@ def prune_stopword_candidates():
                 break
             
     logging.info("Post-aspects: %i", len(list(aspect_data.keys())))
-            
+
+
+def compute_a_score(pos_sentences):
+    global aspect_data
+
+    logging.info("Computing A-scores...")
+
+    for aspect in tqdm(aspect_data.keys()):
+        score = ascore.a_score(aspect_data, aspect, len(pos_sentences))
+        aspect_data[aspect]["ascore"] = score
 
 def parse():
     """Handle all command line argument parsing.
