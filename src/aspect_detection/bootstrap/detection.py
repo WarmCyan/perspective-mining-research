@@ -1,5 +1,6 @@
 #!/bin/python3
 import nltk
+from nltk.corpus import stopwords
 import logging
 import itertools
 import json
@@ -26,6 +27,7 @@ def detect(input_file, count=-1, overwrite=False):
 
     pos_sentences, sentences = tokenize(docs)
     generate_candidates(pos_sentences)
+    prune_stopword_candidates()
     compute_flr(pos_sentences)
 
     #print(aspect_data)
@@ -73,7 +75,7 @@ def generate_patterns():
         for pattern in itertools.product(["NN", "NNS", "VBG"], repeat=i):
             build = ["DT"]
             build.extend(pattern)
-            patterns.append(pattern)
+            patterns.append(build)
     
     return patterns
 
@@ -158,6 +160,21 @@ def compute_flr(pos_sentences):
 
     for aspect in tqdm(aspect_data.keys()):
         aspect_data[aspect]["flr"] = flr.flr(aspect_data[aspect]["pos"], pos_sentences, aspect_data)
+
+def prune_stopword_candidates():
+    global aspect_data
+    
+    logging.info("Pruning stopword candidates...")
+    logging.info("Pre-aspects: %i", len(list(aspect_data.keys())))
+
+    for aspect in tqdm(list(aspect_data.keys())):
+        for aspect_part in aspect_data[aspect]["pos"]:
+            if aspect_part[0] in stopwords.words("english"):
+                del(aspect_data[aspect])
+                break
+            
+    logging.info("Post-aspects: %i", len(list(aspect_data.keys())))
+            
 
 def parse():
     """Handle all command line argument parsing.
