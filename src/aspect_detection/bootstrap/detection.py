@@ -7,6 +7,9 @@ import argparse
 
 from tqdm import tqdm
 
+import flr
+import util
+
 # NOTE: conceptually coming from "An unsupervised aspect detection model for sentiment analysis of reviews"
 
 aspect_data = {}
@@ -20,11 +23,12 @@ def detect(input_file, count=-1, overwrite=False):
         docs = json.load(infile)
 
     if count > 0: docs = docs[0:count]
-    
-    pos_sentences, sentences = tokenize(docs)
-    find_aspects(pos_sentences)
 
+    pos_sentences, sentences = tokenize(docs)
+    generate_candidates(pos_sentences)
     print(aspect_data)
+    compute_flr(pos_sentences)
+
 
 
 # take in a list of documents, and turn into POS sentences
@@ -44,6 +48,7 @@ def tokenize(docs):
 
     return pos_sentences, sentences
 
+# TODO: definitely move out
 def generate_patterns():
     patterns = []
 
@@ -64,9 +69,9 @@ def generate_patterns():
     
     return patterns
 
-def find_aspects(pos_sentences):
+def generate_candidates(pos_sentences):
     patterns = generate_patterns()
-    logging.info("Finding aspects...")
+    logging.info("Generating aspect candidates...")
 
     index = 0
     for pos_sentence in tqdm(pos_sentences):
@@ -82,9 +87,7 @@ def find_aspects(pos_sentences):
 
         index += 1
 
-def stringify_pos(pos):
-    return " ".join([word for word, tag in pos])
-
+# TODO: move out
 def detect_sentence_aspects(pos_sentence, pattern, sentence_index, order_matters=True, count=-1):
     global aspect_data
 
@@ -93,7 +96,7 @@ def detect_sentence_aspects(pos_sentence, pattern, sentence_index, order_matters
     else:
         end = len(pos_sentence) - count
 
-    if len(pattern) >= len(pos_sentence):
+    if len(pattern) >= len(pos_sentence) or count >= len(pos_sentence):
         return
 
     for index, (word, pos) in enumerate(pos_sentence, 1):
@@ -103,28 +106,50 @@ def detect_sentence_aspects(pos_sentence, pattern, sentence_index, order_matters
         i = 0
         found = True
 
-        # this is for specific sequences of tags
+        # this is for specific sequences of tags ex: match exactly a pattern of "JJ NN NNS"
         if order_matters:
+            # for each word type (in order, enforced by i) in the requested pattern
             for part in pattern:
+
+                # is the word type at point i does not match point i in the pattern, NOPE it out of here
                 if part != pos_sentence[index + i][1]:
                     found = False
                     break
                 i += 1
+        
+        # this is for detecting any combinations of word types in pattern of "count" size
         else:
+            # check each word in the sentence from index to maximum pattern size
             for part in pos_sentence[index:index + count]:
+
+                # if the word type isn't anywhere in the pattern, NOPE it out of here
                 if part[1] not in pattern:
                     found = False
                     break
 
         if found:
-            aspect = pos_sentence[index:index + len(pattern)]
+
+            aspect = None
+            if order_matters:
+                aspect = pos_sentence[index:index + len(pattern)]
+            else:
+                aspect = pos_sentence[index:index + count]
+                
             # add to database as needed
-            string_aspect = stringify_pos(aspect)
+            string_aspect = util.stringify_pos(aspect)
             if string_aspect not in aspect_data.keys():
-                aspect_data[string_aspect] = {"count": 1, "sentences": [sentence_index]}
+                aspect_data[string_aspect] = {"count": 1, "sentences": [sentence_index], "pos": aspect}
             else:
                 aspect_data[string_aspect]["count"] += 1
                 aspect_data[string_aspect]["sentences"].append(sentence_index)
+
+def compute_flr(pos_sentences):
+    global aspect_data
+
+    logging.info("Computing FLR scores...")
+
+    for aspect in tqdm(aspect_data.keys()):
+        aspect_data[aspect]["flr"] = flr.flr(aspect_data[aspect]["pos"], pos_sentences, aspect_data)
 
 def parse():
     """Handle all command line argument parsing.
