@@ -32,8 +32,6 @@ def detect(input_file, count=-1, overwrite=False):
     compute_flr(pos_sentences)
     compute_a_score(pos_sentences)
 
-    #print(aspect_data)
-
     # testing just what's top and what isn't
     sorted_aspects = sorted(aspect_data, key = lambda x: aspect_data[x]["ascore"])
     for thing in sorted_aspects:
