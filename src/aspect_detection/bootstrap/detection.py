@@ -12,14 +12,19 @@ import flr
 import util
 import ascore
 
+from ... import utility
+
 # NOTE: conceptually coming from "An unsupervised aspect detection model for sentiment analysis of reviews"
 
 aspect_data = {}
 
 
-def detect(input_file, count=-1, overwrite=False):
+def detect(input_file, output_file, count=-1, overwrite=False):
     global aspect_data
     logging.info("Aspect detection requested on document set '%s'...", input_file)
+
+    if not utility.check_output_necessary(output_file, overwrite):
+        return
 
     with open(input_file, 'r') as infile:
         docs = json.load(infile)
@@ -29,8 +34,13 @@ def detect(input_file, count=-1, overwrite=False):
     pos_sentences, sentences = tokenize(docs)
     generate_candidates(pos_sentences)
     prune_stopword_candidates()
-    compute_flr(pos_sentences)
-    compute_a_score(pos_sentences)
+
+    with open(output_file, 'w') as file_out:
+        json.dump(aspect_data, file_out)
+    exit()
+    
+    #compute_flr(pos_sentences)
+    #compute_a_score(pos_sentences)
 
     # testing just what's top and what isn't
     sorted_aspects = sorted(aspect_data, key = lambda x: aspect_data[x]["ascore"])
@@ -192,15 +202,15 @@ def parse():
     """
     parser = argparse.ArgumentParser()
 
-    #parser.add_argument(
-    #    "-o",
-    #    "--output",
-    #    dest="output_path",
-    #    type=str,
-    #    required=True,
-    #    metavar="<str>",
-    #    help="The name and path for the output sentence data",
-    #)
+    parser.add_argument(
+        "-o",
+        "--output",
+        dest="output_file",
+        type=str,
+        required=True,
+        metavar="<str>",
+        help="The name and path for the output sentence data",
+    )
     parser.add_argument(
         "-i",
         "--input",
@@ -234,4 +244,4 @@ if __name__ == "__main__":
     logging.basicConfig(format="%(asctime)s : %(levelname)s : %(message)s", level=logging.INFO)
 
     ARGS = parse()
-    detect(ARGS.input_file, ARGS.count, ARGS.overwrite)
+    detect(ARGS.input_file, ARGS.output_file, ARGS.count, ARGS.overwrite)
