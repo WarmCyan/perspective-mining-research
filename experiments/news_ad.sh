@@ -1,6 +1,6 @@
 #!/bin/bash
 
-pushd ../src
+pushd ../perspective
 
 # 100,000,000
 #sentencify.py -i ../data/raw/kaggle1 -o ../data/cache/kaggle1_sentences.dat -c 10000000000 --overwrite

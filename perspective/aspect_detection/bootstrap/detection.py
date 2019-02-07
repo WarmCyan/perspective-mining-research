@@ -12,7 +12,9 @@ import flr
 import util
 import ascore
 
-from ... import utility
+import os, sys
+sys.path.insert(0, os.path.abspath("../../../"))
+from perspective import utility
 
 # NOTE: conceptually coming from "An unsupervised aspect detection model for sentiment analysis of reviews"
 
