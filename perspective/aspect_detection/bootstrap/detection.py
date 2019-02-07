@@ -37,11 +37,11 @@ def detect(input_file, output_file, count=-1, overwrite=False):
     generate_candidates(pos_sentences)
     prune_stopword_candidates()
 
+    compute_flr(pos_sentences)
     with open(output_file, 'w') as file_out:
         json.dump(aspect_data, file_out)
     exit()
     
-    #compute_flr(pos_sentences)
     #compute_a_score(pos_sentences)
 
     # testing just what's top and what isn't
