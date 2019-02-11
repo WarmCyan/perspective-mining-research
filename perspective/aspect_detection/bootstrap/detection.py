@@ -21,11 +21,11 @@ from perspective import utility
 aspect_data = {}
 
 
-def detect(input_file, output_file, count=-1, overwrite=False):
+def detect(input_file, output_path, count=-1, overwrite=False):
     global aspect_data
     logging.info("Aspect detection requested on document set '%s'...", input_file)
 
-    if not utility.check_output_necessary(output_file, overwrite):
+    if not utility.check_output_necessary(output_path, overwrite):
         return
 
     with open(input_file, 'r') as infile:
@@ -33,12 +33,19 @@ def detect(input_file, output_file, count=-1, overwrite=False):
 
     if count > 0: docs = docs[0:count]
 
-    pos_sentences, sentences = tokenize(docs)
+    pos_sentences, sentences = tokenize(docs) # NOTE: sentences never used
     generate_candidates(pos_sentences)
     prune_stopword_candidates()
 
     compute_flr(pos_sentences)
-    with open(output_file, 'w') as file_out:
+
+    # make the output path if it doens't exist
+    if not os.path.exists(output_path):
+        os.makedirs(output_path)
+    
+    with open(output_path + "/pos.json", 'w') as file_out:
+        json.dump(pos_sentences, file_out)
+    with open(output_path + "/aspects.json" , 'w') as file_out:
         json.dump(aspect_data, file_out)
     exit()
     
@@ -207,11 +214,11 @@ def parse():
     parser.add_argument(
         "-o",
         "--output",
-        dest="output_file",
+        dest="output_path",
         type=str,
         required=True,
         metavar="<str>",
-        help="The name and path for the output sentence data",
+        help="The path to the folder for the output data",
     )
     parser.add_argument(
         "-i",
@@ -246,4 +253,4 @@ if __name__ == "__main__":
     logging.basicConfig(format="%(asctime)s : %(levelname)s : %(message)s", level=logging.INFO)
 
     ARGS = parse()
-    detect(ARGS.input_file, ARGS.output_file, ARGS.count, ARGS.overwrite)
+    detect(ARGS.input_file, ARGS.output_path, ARGS.count, ARGS.overwrite)
