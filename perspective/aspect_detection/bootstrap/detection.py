@@ -33,7 +33,7 @@ def detect(input_file, output_path, count=-1, overwrite=False):
 
     if count > 0: docs = docs[0:count]
 
-    pos_sentences, sentences = tokenize(docs) # NOTE: sentences never used
+    pos_sentences, sentences, document_sentences, sentence_documents = tokenize(docs) # NOTE: sentences never used
     generate_candidates(pos_sentences)
     prune_stopword_candidates()
 
@@ -47,6 +47,10 @@ def detect(input_file, output_path, count=-1, overwrite=False):
         json.dump(pos_sentences, file_out)
     with open(output_path + "/aspects.json" , 'w') as file_out:
         json.dump(aspect_data, file_out)
+    with open(output_path + "/doc_sent.json" , 'w') as file_out:
+        json.dump(document_sentences, file_out)
+    with open(output_path + "/sent_doc.json" , 'w') as file_out:
+        json.dump(sentence_documents, file_out)
     exit()
     
     #compute_a_score(pos_sentences)
@@ -63,9 +67,29 @@ def tokenize(docs):
     sentences = []
     pos_sentences = []
 
+    # TODO: this is probably a terrible way of doing this...
+    document_sentences = []
+    sentence_documents = []
+
     logging.info("Sentencifying documents...")
+    sentence_index_start = 0
+    doc_index = 0
     for doc in tqdm(docs):
-        sentences.extend(nltk.sent_tokenize(doc))
+
+        # tokenize
+        local_sentences = nltk.sent_tokenize(doc)
+        count = len(local_sentences)
+
+        # add the associated sentence id's to the document sentences
+        document_sentences.append(list(range(sentence_index_start, sentence_index_start + count)))
+        sentence_index_start += count
+
+        # add the associated document id to the sentence_documents list
+        sentence_documents.extend([doc_index]*count)
+        doc_index += 1
+
+        # add the tokenized sentences
+        sentences.extend(local_sentences)
 
     logging.info("Tokenizing sentences...")
     for sentence in tqdm(sentences):
@@ -75,7 +99,7 @@ def tokenize(docs):
         tagged = nltk.pos_tag(words)
         pos_sentences.append(tagged)
 
-    return pos_sentences, sentences
+    return pos_sentences, sentences, document_sentences, sentence_documents
 
 # TODO: definitely move out
 def generate_patterns():
