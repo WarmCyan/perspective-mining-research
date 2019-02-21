@@ -25,7 +25,7 @@ def detect(input_file, output_path, count=-1, overwrite=False):
     global aspect_data
     logging.info("Aspect detection requested on document set '%s'...", input_file)
 
-    if not utility.check_output_necessary(output_path, overwrite):
+    if not utility.check_output_necessary(output_path + "/pos.json", overwrite):
         return
 
     with open(input_file, 'r') as infile:

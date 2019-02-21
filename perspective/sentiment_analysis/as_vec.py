@@ -2,13 +2,15 @@
 
 import json
 import nltk
+import logging
+import argparse
 
 from nltk.corpus import sentiwordnet as swn
 from tqdm import tqdm
 
 import os, sys
+sys.path.insert(0, os.path.abspath("../../"))
 from perspective import utility
-#sys.path.insert(0, os.path.abspath("../../"))
 #from perspective import utility
 
 # NOTE: expecting an aspects.json, pos.json, sent_doc.json, doc_sent.json
@@ -23,22 +25,22 @@ def create_as_vectors(input_path, output_path, overwrite=False):
     # load data from input_path
     aspect_data = {}
     logging.info("Loading aspects...")
-    with open("../data/cache/kaggle_aspects/aspects.json") as in_file:
+    with open(input_path + "/aspects.json") as in_file:
         aspect_data = json.load(in_file)
 
     pos_sentences = []
     logging.info("Loading pos sentences...")
-    with open("../data/cache/kaggle_aspects/pos.json") as in_file:
+    with open(input_path + "/pos.json") as in_file:
         pos_sentences = json.load(in_file)
 
     document_sentences = []
     logging.info("Loading sentence document associations...")
-    with open("../data/cache/kaggle_aspects/sent_doc.json") as in_file:
+    with open(input_path + "/sent_doc.json") as in_file:
         sentence_documents = json.load(in_file)
 
     sentence_documents = []
     logging.info("Loading document sentence associations...")
-    with open("../data/cache/kaggle_aspects/doc_sent.json") as in_file:
+    with open(input_path + "/doc_sent.json") as in_file:
         document_sentences = json.load(in_file)
 
     # TODO: this needs to be moved elsewhere
@@ -98,7 +100,7 @@ def create_as_vectors(input_path, output_path, overwrite=False):
 
     # for each aspect, go through every document and find all sentences with that aspect
     doc_as_vectors = []
-    num_docs = len(document_sentences.keys())
+    num_docs = len(document_sentences)
 
     # initialize vectors
     for i in range(0, num_docs):
@@ -120,3 +122,52 @@ def create_as_vectors(input_path, output_path, overwrite=False):
                     aspect_score -= sentiment[1]
 
             doc_as_vectors[i].append(aspect_score)
+
+    # make the output path if it doens't exist
+    if not os.path.exists(output_path):
+        os.makedirs(output_path)
+        
+    with open(output_path + "/doc_as_vectors.json", "w") as file_out:
+        json.dump(doc_as_vectors, file_out)
+    
+            
+def parse():
+    """Handle all command line argument parsing.
+
+    Returns the parsed args object from the parser
+    """
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument(
+        "-o",
+        "--output",
+        dest="output_path",
+        type=str,
+        required=True,
+        metavar="<str>",
+        help="The path to the folder for the output data",
+    )
+    parser.add_argument(
+        "-i",
+        "--input",
+        dest="input_path",
+        type=str,
+        required=True,
+        metavar="<str>",
+        help="The path to the folder containing aspect and document info json data",
+    )
+    parser.add_argument(
+        "--overwrite",
+        dest="overwrite",
+        action="store_true",
+        help="Specify this flag to overwrite existing output data if they exist",
+    )
+
+    cmd_args = parser.parse_args()
+    return cmd_args
+
+if __name__ == "__main__":
+    logging.basicConfig(format="%(asctime)s : %(levelname)s : %(message)s", level=logging.INFO)
+
+    ARGS = parse()
+    create_as_vectors(ARGS.input_path, ARGS.output_path, ARGS.overwrite)
