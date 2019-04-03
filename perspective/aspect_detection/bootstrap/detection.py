@@ -202,19 +202,22 @@ def detect_sentence_aspects(pos_sentence, pattern, sentence_index, order_matters
 def compute_flr(pos_sentences, thread_count=-1):
     global aspect_data
 
-    # https://www.machinelearningplus.com/python/parallel-processing-python/
-    p = thread_count
-    if thread_count == -1: p = mp.cpu_count()
-    pool = mp.Pool(p)
+    with mp.Manager() as manager:
+        d = manager.dict(aspect_data)
 
-    logging.info("Computing FLR scores on %i cores...", p)
+        # https://www.machinelearningplus.com/python/parallel-processing-python/
+        p = thread_count
+        if thread_count == -1: p = mp.cpu_count()
+        pool = mp.Pool(p)
 
-    # run flr calculation in parallel
-    for rank in range(0, p):
-        pool.apply_async(compute_flr_partition, args=(aspect_data, pos_sentences, rank, p), callback=collect_flr)
+        logging.info("Computing FLR scores on %i cores...", p)
 
-    pool.close()
-    pool.join()
+        # run flr calculation in parallel
+        for rank in range(0, p):
+            pool.apply_async(compute_flr_partition, args=(d, pos_sentences, rank, p), callback=collect_flr)
+
+        pool.close()
+        pool.join()
 
     #for aspect in tqdm(aspect_data.keys()):
         #aspect_data[aspect]["flr"] = flr.flr(aspect_data[aspect]["pos"], pos_sentences, aspect_data)
@@ -266,6 +269,8 @@ def prune_stopword_candidates():
 
 def compute_a_score(pos_sentences):
     global aspect_data
+
+    
 
     logging.info("Computing A-scores...")
 
