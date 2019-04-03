@@ -5,12 +5,14 @@ import logging
 import itertools
 import json
 import argparse
+import math
 
-from tqdm import tqdm
+from tqdm import tqdm, trange
 
 import flr
 import util
 import ascore
+import multiprocessing as mp
 
 import os, sys
 sys.path.insert(0, os.path.abspath("../../../"))
@@ -199,10 +201,51 @@ def detect_sentence_aspects(pos_sentence, pattern, sentence_index, order_matters
 def compute_flr(pos_sentences):
     global aspect_data
 
-    logging.info("Computing FLR scores...")
+    # https://www.machinelearningplus.com/python/parallel-processing-python/
+    p = mp.cpu_count()
+    pool = mp.Pool(p)
 
-    for aspect in tqdm(aspect_data.keys()):
-        aspect_data[aspect]["flr"] = flr.flr(aspect_data[aspect]["pos"], pos_sentences, aspect_data)
+    logging.info("Computing FLR scores on %i cores...", p)
+
+    # run flr calculation in parallel
+    for rank in range(0, p):
+        pool.apply_async(compute_flr_partition, args=(aspect_data, pos_sentences, rank, p), callback=collect_flr)
+
+    pool.close()
+    pool.join()
+
+    #for aspect in tqdm(aspect_data.keys()):
+        #aspect_data[aspect]["flr"] = flr.flr(aspect_data[aspect]["pos"], pos_sentences, aspect_data)
+        
+    #for dictionary in results:
+        #for key in dictionary.keys():
+            #aspect_data[key]["flr"] = dictionary[key]
+
+def collect_flr(result):
+    global aspect_data
+
+    # https://www.machinelearningplus.com/python/parallel-processing-python/
+    
+    for key in result.keys():
+        aspect_data[key]["flr"] = result[key]
+
+
+# parallel FLR calculation function
+def compute_flr_partition(aspect_data, pos_sentences, rank, p):
+    local_data = {}
+
+    keys = list(aspect_data.keys())
+    per = math.floor(len(keys) / p)
+    
+    start = per*rank
+    end = per*(rank + 1)
+    if rank == p - 1: end = len(keys)
+
+    for aspect in tqdm(keys[start:end], desc="FLR core {0}".format(rank), position=rank):
+        local_data[aspect] = flr.flr(aspect_data[aspect]["pos"], pos_sentences, aspect_data)
+
+    return local_data
+    
 
 def prune_stopword_candidates():
     global aspect_data
