@@ -23,7 +23,7 @@ from perspective import utility
 aspect_data = {}
 
 
-def detect(input_file, output_path, count=-1, overwrite=False):
+def detect(input_file, output_path, count=-1, thread_count=-1, overwrite=False):
     global aspect_data
     logging.info("Aspect detection requested on document set '%s'...", input_file)
 
@@ -39,7 +39,7 @@ def detect(input_file, output_path, count=-1, overwrite=False):
     generate_candidates(pos_sentences)
     prune_stopword_candidates()
 
-    compute_flr(pos_sentences)
+    compute_flr(pos_sentences, thread_count)
 
     # make the output path if it doens't exist
     if not os.path.exists(output_path):
@@ -198,11 +198,13 @@ def detect_sentence_aspects(pos_sentence, pattern, sentence_index, order_matters
                 aspect_data[string_aspect]["count"] += 1
                 aspect_data[string_aspect]["sentences"].append(sentence_index)
 
-def compute_flr(pos_sentences):
+# thread_count of -1 means to autodetect
+def compute_flr(pos_sentences, thread_count=-1):
     global aspect_data
 
     # https://www.machinelearningplus.com/python/parallel-processing-python/
-    p = mp.cpu_count()
+    p = thread_count
+    if thread_count == -1: p = mp.cpu_count()
     pool = mp.Pool(p)
 
     logging.info("Computing FLR scores on %i cores...", p)
@@ -312,6 +314,16 @@ def parse():
         metavar="<int>",
         help="The number of sentences to use",
     )
+    parser.add_argument(
+        "-w",
+        "--workers",
+        dest="thread_count",
+        type=int,
+        required=False,
+        default=-1,
+        metavar="<int>",
+        help="The number of worker threads to use",
+    )
 
     cmd_args = parser.parse_args()
     return cmd_args
@@ -320,4 +332,4 @@ if __name__ == "__main__":
     logging.basicConfig(format="%(asctime)s : %(levelname)s : %(message)s", level=logging.INFO)
 
     ARGS = parse()
-    detect(ARGS.input_file, ARGS.output_path, ARGS.count, ARGS.overwrite)
+    detect(ARGS.input_file, ARGS.output_path, ARGS.count, ARGS.thread_count, ARGS.overwrite)
