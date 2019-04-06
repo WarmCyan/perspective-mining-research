@@ -33,12 +33,10 @@ def create_as_vectors(input_path, output_path, overwrite=False):
     with open(input_path + "/pos.json") as in_file:
         pos_sentences = json.load(in_file)
 
-    document_sentences = []
     logging.info("Loading sentence document associations...")
     with open(input_path + "/sent_doc.json") as in_file:
         sentence_documents = json.load(in_file)
 
-    sentence_documents = []
     logging.info("Loading document sentence associations...")
     with open(input_path + "/doc_sent.json") as in_file:
         document_sentences = json.load(in_file)
@@ -49,7 +47,24 @@ def create_as_vectors(input_path, output_path, overwrite=False):
         if aspect_data[aspect]["flr"] > 10.0:
             pruned_data[aspect] = aspect_data[aspect]
 
+    # NOTE: pruned data is subset of aspect_data 
+    
+    doc_as_vectors = []
+    num_docs = len(document_sentences)
+
+    # initialize vectors
+    logging.info("Initializing document aspect-sentiment vectors...")
+    for i in tqdm(range(0, num_docs)):
+        doc_as_vectors.append([])
+
+        for j in range(0, len(pruned_data.keys())):
+            doc_as_vectors[i].append(0.0)
+
+            
+
     # find sentiments
+    as_index = 0
+    logging.info("Finding sentiment words...")
     for aspect in tqdm(pruned_data.keys()):
         pos_aspect = pruned_data[aspect]["pos"]
 
@@ -96,32 +111,52 @@ def create_as_vectors(input_path, output_path, overwrite=False):
 
             pruned_data[aspect]["sentiments"][sentence_index] = aspect_score
 
+            try:
+                sentence_doc = sentence_documents[sentence_index]
+            except: 
+                print(sentence_index)
+                exit()
+            doc_as_vectors[sentence_doc][as_index] += aspect_score[0]
+            doc_as_vectors[sentence_doc][as_index] -= aspect_score[1]
+
+
+        as_index += 1
+
 
 
     # for each aspect, go through every document and find all sentences with that aspect
-    doc_as_vectors = []
-    num_docs = len(document_sentences)
+    #doc_as_vectors = []
+    #num_docs = len(document_sentences)
 
-    # initialize vectors
-    for i in range(0, num_docs):
-        doc_as_vectors.append([])
+    ## initialize vectors
+    #logging.info("Initializing document aspect-sentiment vectors...")
+    #for i in tqdm(range(0, num_docs)):
+    #    doc_as_vectors.append([])
+
+    #    for j in range(0, len(pruned_data.keys())):
+    #        doc_as_vectors[i].append(0.0)
+
+        
+    #logging.info("Calculating sentiment...")
+    #for 
 
     # (fill the aspect sentiment from left to right)
-    for aspect in tqdm(pruned_data.keys()):
-        aspect_meta = pruned_data[aspect]
+    #logging.info("Calculating sentiment...")
+    #for aspect in tqdm(pruned_data.keys()):
+    #    aspect_meta = pruned_data[aspect]
 
-        # iterate each document
-        for i in range(0, num_docs):
-            aspect_score = 0.0
+    #    # iterate each document
+    #    for i in range(0, num_docs):
+    #        aspect_score = 0.0
 
-            # iterate each sentence of the doc, and if this aspect included, aggregate sentiment
-            for sentence_index in document_sentences[i]:
-                if sentence_index in aspect_meta['sentences']:
-                    sentiment = aspect_meta['sentiments'][sentence_index]
-                    aspect_score += sentiment[0]
-                    aspect_score -= sentiment[1]
+    #        # iterate each sentence of the doc, and if this aspect included, aggregate sentiment
+    #        for sentence_index in document_sentences[i]:
+    #            if sentence_index in aspect_meta['sentences']:
+    #                sentiment = aspect_meta['sentiments'][sentence_index]
+    #                aspect_score += sentiment[0]
+    #                aspect_score -= sentiment[1]
 
-            doc_as_vectors[i].append(aspect_score)
+    #        doc_as_vectors[i].append(aspect_score)
 
     # make the output path if it doens't exist
     if not os.path.exists(output_path):
