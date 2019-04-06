@@ -6,7 +6,7 @@ prune_articles.py -i ../data/raw/webhose_political/news.csv -o ../data/cache/web
 docify.py -i ../data/cache/webhose -o ../data/cache/webhose.json --col text
 
 pushd aspect_detection/bootstrap
-detection.py -i ../../../data/cache/webhose.json -o ../../../data/cache/webhose_aspects -w 6
+detection.py -i ../../../data/cache/webhose.json -o ../../../data/cache/webhose_aspects -c 100 
 popd
 
 pushd sentiment_analysis
