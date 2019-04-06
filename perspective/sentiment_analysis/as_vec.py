@@ -14,7 +14,7 @@ from perspective import utility
 #from perspective import utility
 
 # NOTE: expecting an aspects.json, pos.json, sent_doc.json, doc_sent.json
-def create_as_vectors(input_path, output_path, overwrite=False):
+def create_as_vectors(input_path, output_path, minimum_flr=10.0, overwrite=False):
     logging.info("Aspect-sentiment vectors requested for collection at '%s'...", input_path)
 
     nltk.download('sentiwordnet')
@@ -44,7 +44,7 @@ def create_as_vectors(input_path, output_path, overwrite=False):
     # TODO: this needs to be moved elsewhere
     pruned_data = {}
     for aspect in aspect_data.keys():
-        if aspect_data[aspect]["flr"] > 10.0:
+        if aspect_data[aspect]["flr"] > minimum_flr:
             pruned_data[aspect] = aspect_data[aspect]
 
     # NOTE: pruned data is subset of aspect_data 
@@ -192,6 +192,16 @@ def parse():
         help="The path to the folder containing aspect and document info json data",
     )
     parser.add_argument(
+        "-f",
+        "--flr",
+        dest="flr",
+        type=float,
+        required=False,
+        default=10.0,
+        metavar="<float>",
+        help="The minimum flr of an aspect",
+    )
+    parser.add_argument(
         "--overwrite",
         dest="overwrite",
         action="store_true",
@@ -205,4 +215,4 @@ if __name__ == "__main__":
     logging.basicConfig(format="%(asctime)s : %(levelname)s : %(message)s", level=logging.INFO)
 
     ARGS = parse()
-    create_as_vectors(ARGS.input_path, ARGS.output_path, ARGS.overwrite)
+    create_as_vectors(ARGS.input_path, ARGS.output_path, ARGS.flr, ARGS.overwrite)

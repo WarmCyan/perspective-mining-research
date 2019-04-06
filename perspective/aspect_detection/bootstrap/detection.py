@@ -23,7 +23,7 @@ from perspective import utility
 aspect_data = {}
 
 
-def detect(input_file, output_path, count=-1, thread_count=-1, overwrite=False):
+def detect(input_file, output_path, support=0.0, count=-1, thread_count=-1, overwrite=False):
     global aspect_data
     logging.info("Aspect detection requested on document set '%s'...", input_file)
 
@@ -38,6 +38,9 @@ def detect(input_file, output_path, count=-1, thread_count=-1, overwrite=False):
     pos_sentences, sentences, document_sentences, sentence_documents = tokenize(docs) # NOTE: sentences never used
     generate_candidates(pos_sentences)
     prune_stopword_candidates()
+
+    # prune based on support
+    prune_by_support(support, document_sentences, sentence_documents)
 
     compute_flr(pos_sentences, thread_count)
 
@@ -62,6 +65,7 @@ def detect(input_file, output_path, count=-1, thread_count=-1, overwrite=False):
     for thing in sorted_aspects:
         yep = aspect_data[thing]
         print(yep["pos"], yep["ascore"])
+
 
 
 # take in a list of documents, and turn into POS sentences
@@ -267,6 +271,30 @@ def prune_stopword_candidates():
     logging.info("Post-aspects: %i", len(list(aspect_data.keys())))
 
 
+    #prune_by_support(support, document_sentences, sentence_documents)
+def prune_by_support(min_support, document_sentences, sentence_documents):
+    global aspect_data
+
+    logging.info("Pruning candidates by minimum document support %i...", min_support)
+
+    minimum_count = int(min_support * len(document_sentences))
+    logging.info("Minimum count of %i needed is %i", len(document_sentences), minimum_count)
+
+    for aspect in tqdm(list(aspect_data.keys())):
+        unique_docs = 0
+        docs = []
+        for sentence_index in aspect_data[aspect]["sentences"]:
+            doc = sentence_documents[sentence_index]
+            if doc not in docs:
+                docs.append(doc)
+                unique_docs += 1
+
+        if unique_docs < minimum_count:
+            del aspect_data[aspect]
+
+    logging.info("Post-aspects: %i", len(list(aspect_data.keys())))
+
+
 def compute_a_score(pos_sentences):
     global aspect_data
 
@@ -310,6 +338,16 @@ def parse():
         help="Specify this flag to overwrite existing output data if they exist",
     )
     parser.add_argument(
+        "-s",
+        "--support",
+        dest="support",
+        type=float,
+        required=False,
+        default=0.0,
+        metavar="<float>",
+        help="The minimum percentage of documents an aspect must appear in",
+    )
+    parser.add_argument(
         "-c",
         "--count",
         dest="count",
@@ -337,4 +375,4 @@ if __name__ == "__main__":
     logging.basicConfig(format="%(asctime)s : %(levelname)s : %(message)s", level=logging.INFO)
 
     ARGS = parse()
-    detect(ARGS.input_file, ARGS.output_path, ARGS.count, ARGS.thread_count, ARGS.overwrite)
+    detect(ARGS.input_file, ARGS.output_path, ARGS.support, ARGS.count, ARGS.thread_count, ARGS.overwrite)
