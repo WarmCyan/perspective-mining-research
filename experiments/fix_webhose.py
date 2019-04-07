@@ -6,7 +6,12 @@ from tqdm import tqdm
 
 import csv
 
-with open('../data/raw/webhose_political/news.csv', mode='w') as csv_file:
+output_path = "../data/raw/webhose_political/news.csv"
+
+if not os.path.exists(output_path):
+    os.makedirs(output_path)
+    
+with open(output_path, mode='w') as csv_file:
     fieldnames = ['site', 'author', 'title', 'text']
     writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
     writer.writeheader()

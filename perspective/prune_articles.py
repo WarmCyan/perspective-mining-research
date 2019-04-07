@@ -33,6 +33,10 @@ def prune_articles(input_file, output_file, source_threshold=20, word_threshold=
     article_table = article_table[article_table.site.isin(acceptable_sources)]
 
     logging.info("Pruned to %i articles", article_table.shape[0])
+    
+    # make the output path if it doens't exist
+    if not os.path.exists(output_file):
+        os.makedirs(output_file)
 
     # write it out
     article_table.to_csv(output_file)
