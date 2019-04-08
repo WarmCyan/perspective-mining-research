@@ -114,6 +114,7 @@ def fix_paths(experiment_path, input_path, output_path):
     """Resolve any relative paths that are passed."""
     if not os.path.isabs(input_path):
         input_path = os.path.abspath(experiment_path + "/" + input_path)
-    output_path = os.path.abspath(experiment_path + "/" + output_path)
+    if not os.path.isabs(output_path):
+        output_path = os.path.abspath(experiment_path + "/" + output_path)
 
     return input_path, output_path
