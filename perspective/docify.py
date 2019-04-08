@@ -41,16 +41,6 @@ def docify(input_folder, output_path, count=-1, content_column="content", overwr
                 article_table = article_table_in
             else:
                 article_table = pd.concat([article_table, article_table_in])
-    
-    
-    #logging.debug("Loading articles1.csv...")
-    #article_table1 = pd.read_csv(input_folder + "/articles1.csv")
-    #logging.debug("Loading articles2.csv...")
-    #article_table2 = pd.read_csv(input_folder + "/articles2.csv")
-    #logging.debug("Loading articles3.csv...")
-    #article_table3 = pd.read_csv(input_folder + "/articles3.csv")
-
-    #article_table = pd.concat([article_table1, article_table2, article_table3])
 
     # split every sentence from every article on '.'
     logging.info("Grabbing articles...")
@@ -60,7 +50,6 @@ def docify(input_folder, output_path, count=-1, content_column="content", overwr
             break
 
         documents.append(article)
-
 
     # write out the file
     logging.info("Saving document data to '%s'", output_path)
@@ -76,41 +65,8 @@ def parse():
     Returns the parsed args object from the parser
     """
     parser = argparse.ArgumentParser()
+    parser = utility.add_common_parsing(parser)
 
-    parser.add_argument(
-        "-o",
-        "--output",
-        dest="output_path",
-        type=str,
-        required=True,
-        metavar="<str>",
-        help="The name and path for the output document data",
-    )
-    parser.add_argument(
-        "-i",
-        "--input",
-        dest="input_folder",
-        type=str,
-        required=True,
-        metavar="<str>",
-        help="The path to the folder containing the kaggle1 raw input data",
-    )
-    parser.add_argument(
-        "--overwrite",
-        dest="overwrite",
-        action="store_true",
-        help="Specify this flag to overwrite existing output data if they exist",
-    )
-    parser.add_argument(
-        "-c",
-        "--count",
-        dest="count",
-        type=int,
-        required=False,
-        default=-1,
-        metavar="<int>",
-        help="The number of sentences to use",
-    )
     parser.add_argument(
         "--col",
         dest="column",
@@ -125,7 +81,8 @@ def parse():
     return cmd_args
 
 if __name__ == "__main__":
-    logging.basicConfig(format="%(asctime)s : %(levelname)s : %(message)s", level=logging.INFO)
-
     ARGS = parse()
-    docify(ARGS.input_folder, ARGS.output_path, ARGS.count, ARGS.column, ARGS.overwrite)
+    utility.init_logging(ARGS.log_path)
+    input_path, output_path = utility.fix_paths(ARGS.experiment_path, ARGS.input_path, ARGS.output_path)
+
+    docify(input_path, output_path, ARGS.count, ARGS.column, ARGS.overwrite)

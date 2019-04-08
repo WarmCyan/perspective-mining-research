@@ -1,8 +1,8 @@
 #!/bin/bash
 
-export RAW='../data/raw'
-export CACHE='../data/cache'
-export LOG='../log'
+export RAW=$(readlink -f '../data/raw')
+export CACHE=$(readlink -f '../data/cache')
+export LOG=$(readlink -f '../log')
 
 CHECK="\xE2\x9C\x94"
 X="\xE2\x9D\x8C"

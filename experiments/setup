@@ -4,12 +4,12 @@ pushd ../bin > /dev/null
 source env
 
 export TIMESTAMP=$(date +"%Y-%m-%d_%T")
-export EXPERIMENT="$CACHE/$1"
-export LOG_FILE="$LOG/$1_$TIMESTAMP.log"
+export EXPERIMENT=$(readlink -f "$CACHE/$1")
+export LOG_FILE=$(readlink -f "$LOG/$1_$TIMESTAMP.log")
 
 # check if additional note argument was supplied
 if [ "$#" -gt 1 ]; then
-	LOG_FILE="$LOG/$1_${TIMESTAMP}_$2.log"
+	LOG_FILE=$(readlink -f "$LOG/$1_${TIMESTAMP}_$2.log")
 fi
 
 function log {
