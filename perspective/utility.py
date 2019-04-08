@@ -2,6 +2,7 @@
 
 import logging
 import os.path
+import sys
 
 def check_output_necessary(output_path, overwrite):
     """Determine whether a step is necessary by checking for its existence/overwrite combo.
@@ -25,3 +26,17 @@ def check_output_necessary(output_path, overwrite):
 
     # if this point hit, the file doesn't exist yet
     return True
+
+def init_logging(log_path):
+    """Sets up logging config, including associated file output."""
+    log_formatter = logging.Formatter("%(asctime)s - %(filename)s - %(levelname)s - %(message)s")
+    root_logger = logging.getLogger()
+    root_logger.setLevel(logging.INFO)
+
+    file_handler = logging.FileHandler(log_path)
+    file_handler.setFormatter(log_formatter)
+    root_logger.addHandler(file_handler)
+
+    console_handler = logging.StreamHandler(sys.stdout)
+    console_handler.setFormatter(log_formatter)
+    root_logger.addHandler(console_handler)

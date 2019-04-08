@@ -1,11 +1,11 @@
 #!/bin/bash
 
-pushd ../bin
-. env
+pushd ../bin > /dev/null
+source env
 
-TIMESTAMP=$(date +"%Y-%m-%d_%T")
-EXPERIMENT="$CACHE/$1"
-LOG_FILE="$LOG/$1_$TIMESTAMP.log"
+export TIMESTAMP=$(date +"%Y-%m-%d_%T")
+export EXPERIMENT="$CACHE/$1"
+export LOG_FILE="$LOG/$1_$TIMESTAMP.log"
 
 # check if additional note argument was supplied
 if [ "$#" -gt 1 ]; then

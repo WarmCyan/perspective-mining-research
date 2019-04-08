@@ -1,8 +1,8 @@
 #!/bin/bash
 
-RAW='../data/raw'
-CACHE='../data/cache'
-LOG='../log'
+export RAW='../data/raw'
+export CACHE='../data/cache'
+export LOG='../log'
 
 CHECK="\xE2\x9C\x94"
 X="\xE2\x9D\x8C"
@@ -35,3 +35,9 @@ else
 fi
 
 echo "Env check complete"
+
+# silence!
+pushd() { builtin pushd $1 > /dev/null; }
+popd() { builtin popd > /dev/null; }
+export -f pushd
+export -f popd

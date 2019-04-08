@@ -1,0 +1,7 @@
+#!/bin/bash
+
+pushd ../perspective
+
+python test.py $LOG_FILE
+
+popd
