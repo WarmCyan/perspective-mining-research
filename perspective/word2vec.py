@@ -1,5 +1,5 @@
-#!/usr/bin/env python
 
+#!/usr/bin/env python
 # code drawn in part from https://github.com/harpaj/Unsupervised-Aspect-Extraction
 
 """This script takes a file of input data and outputs a word2vec model."""

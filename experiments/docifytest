@@ -2,10 +2,4 @@
 
 source setup testdoc
 docify -i $RAW/kaggle1 -o documents.json
-
-
-#pushd ../perspective
-
-#docify.py -i ../data/raw/kaggle1 -o ../data/cache/kaggle1_docs.dat --overwrite
-
-#popd
+bootstrap-detection -i documents.json -o aspects -c 100

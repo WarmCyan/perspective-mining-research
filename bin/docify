@@ -2,6 +2,6 @@
 
 pushd ../perspective
 
-python docify.py --log $LOG_FILE --experiment-dir $EXPERIMENT "$@"
+docify.py --log $LOG_FILE --experiment-dir $EXPERIMENT "$@"
 
 popd

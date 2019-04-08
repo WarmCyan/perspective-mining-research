@@ -312,31 +312,8 @@ def parse():
     Returns the parsed args object from the parser
     """
     parser = argparse.ArgumentParser()
+    parser = utility.add_common_parsing(parser)
 
-    parser.add_argument(
-        "-o",
-        "--output",
-        dest="output_path",
-        type=str,
-        required=True,
-        metavar="<str>",
-        help="The path to the folder for the output data",
-    )
-    parser.add_argument(
-        "-i",
-        "--input",
-        dest="input_file",
-        type=str,
-        required=True,
-        metavar="<str>",
-        help="The path to the json file containing the input documents",
-    )
-    parser.add_argument(
-        "--overwrite",
-        dest="overwrite",
-        action="store_true",
-        help="Specify this flag to overwrite existing output data if they exist",
-    )
     parser.add_argument(
         "-s",
         "--support",
@@ -347,32 +324,13 @@ def parse():
         metavar="<float>",
         help="The minimum percentage of documents an aspect must appear in",
     )
-    parser.add_argument(
-        "-c",
-        "--count",
-        dest="count",
-        type=int,
-        required=False,
-        default=-1,
-        metavar="<int>",
-        help="The number of sentences to use",
-    )
-    parser.add_argument(
-        "-w",
-        "--workers",
-        dest="thread_count",
-        type=int,
-        required=False,
-        default=-1,
-        metavar="<int>",
-        help="The number of worker threads to use",
-    )
 
     cmd_args = parser.parse_args()
     return cmd_args
 
 if __name__ == "__main__":
-    logging.basicConfig(format="%(asctime)s : %(levelname)s : %(message)s", level=logging.INFO)
-
     ARGS = parse()
-    detect(ARGS.input_file, ARGS.output_path, ARGS.support, ARGS.count, ARGS.thread_count, ARGS.overwrite)
+    utility.init_logging(ARGS.log_path)
+    input_path, output_path = utility.fix_paths(ARGS.experiment_path, ARGS.input_path, ARGS.output_path)
+
+    detect(input_path, output_path, ARGS.support, ARGS.count, ARGS.workers, ARGS.overwrite)
