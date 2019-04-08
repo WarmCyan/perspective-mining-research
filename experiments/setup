@@ -1,0 +1,30 @@
+#!/bin/bash
+
+pushd ../bin
+. env
+
+TIMESTAMP=$(date +"%Y-%m-%d_%T")
+EXPERIMENT="$CACHE/$1"
+LOG_FILE="$LOG/$1_$TIMESTAMP.log"
+
+# check if additional note argument was supplied
+if [ "$#" -gt 1 ]; then
+	LOG_FILE="$LOG/$1_${TIMESTAMP}_$2.log"
+fi
+
+function log {
+	echo -e "$1" 2>&1 | tee -a $LOG_FILE
+}
+
+log "==========================" 
+log "Preparing experiment $1..."
+
+log "\nExperiment directory: $EXPERIMENT"
+
+if [ ! -d $EXPERIMENT ]; then
+	log "(Previous run not found, creating experiment directory)"
+	mkdir -p $EXPERIMENT
+fi
+
+log "Experiment run time: $TIMESTAMP"
+log "--------------------------" 

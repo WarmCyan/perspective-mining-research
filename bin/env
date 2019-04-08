@@ -1,0 +1,37 @@
+#!/bin/bash
+
+RAW='../data/raw'
+CACHE='../data/cache'
+LOG='../log'
+
+CHECK="\xE2\x9C\x94"
+X="\xE2\x9D\x8C"
+
+# overwriteall=''
+
+echo "Ensuring env..."
+
+printf "Cache\t"
+if [ ! -d $CACHE ]; then
+	mkdir -p $CACHE
+fi
+if [ ! -d $CACHE ]; then
+	printf "$X\n"
+	exit
+else
+	printf "$CHECK\n"
+fi
+
+
+printf "Log\t"
+if [ ! -d $LOG ]; then
+	mkdir -p $LOG
+fi
+if [ ! -d $LOG ]; then
+	printf "$X\n"
+	exit
+else
+	printf "$CHECK\n"
+fi
+
+echo "Env check complete"

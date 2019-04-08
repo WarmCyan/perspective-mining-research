@@ -2,3 +2,4 @@ external/*
 data/*
 **/.ipynb_checkpoints
 **/__pycache__/*
+log/*
