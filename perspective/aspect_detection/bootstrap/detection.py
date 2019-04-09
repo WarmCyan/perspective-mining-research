@@ -36,7 +36,6 @@ def detect(input_file, output_path, support=0.0, count=-1, thread_count=-1, over
 
     if count > 0: docs = docs[0:count]
 
-    # TODO: check if pos files already exist
     # TODO: the input document arrays should be of dictionaries with "text" being the content
     # TODO: really don't need count here, that should be property of docify not detection
 
