@@ -26,8 +26,9 @@ aspect_data = {}
 def detect(input_file, output_path, support=0.0, count=-1, thread_count=-1, overwrite=False):
     global aspect_data
     logging.info("Aspect detection requested on document set '%s'...", input_file)
+    logging.info("(Support level: %f)", support)
 
-    if not utility.check_output_necessary(output_path + "/pos.json", overwrite):
+    if not utility.check_output_necessary(output_path + "/aspects.json", overwrite):
         return
 
     with open(input_file, 'r') as infile:
@@ -38,9 +39,46 @@ def detect(input_file, output_path, support=0.0, count=-1, thread_count=-1, over
     # TODO: check if pos files already exist
     # TODO: the input document arrays should be of dictionaries with "text" being the content
     # TODO: really don't need count here, that should be property of docify not detection
-    # TODO: need to save more input parameters in log
 
-    pos_sentences, sentences, document_sentences, sentence_documents = tokenize(docs) # NOTE: sentences never used
+    pos_path = output_path + "/pos.json"
+    doc_sent_path = output_path + "/doc_sent.json"
+    sent_doc_path = output_path + "/sent_doc.json"
+
+    logging.info("Checking for cached tokenization information...")
+    pos_needed = True
+    doc_sent_needed = True
+    sent_doc_needed = True
+    if not utility.check_output_necessary(pos_path, overwrite):
+        pos_needed = False
+    if not utility.check_output_necessary(doc_sent_path, overwrite):
+        doc_sent_needed = False
+    if not utility.check_output_necessary(sent_doc_path, overwrite):
+        sent_doc_needed = False
+        
+    # make the output path if it doens't exist
+    if not os.path.exists(output_path):
+        os.makedirs(output_path)
+
+    if pos_needed or doc_sent_needed or sent_doc_needed:
+        pos_sentences, sentences, document_sentences, sentence_documents = tokenize(docs) # NOTE: sentences never used
+    
+        logging.info("Saving tokenization information...")
+        with open(pos_path, 'w') as file_out:
+            json.dump(pos_sentences, file_out)
+        with open(doc_sent_path, 'w') as file_out:
+            json.dump(document_sentences, file_out)
+        with open(sent_doc_path, 'w') as file_out:
+            json.dump(sentence_documents, file_out)
+    else:
+        # load in 
+        logging.info("Loading tokenization information...")
+        with open(pos_path, 'r') as file_in:
+            pos_sentences = json.load(file_in)
+        with open(doc_sent_path, 'r') as file_in:
+            document_sentences = json.load(file_in)
+        with open(sent_doc_path, 'r') as file_in:
+            sentence_documents = json.load(file_in)
+    
     generate_candidates(pos_sentences)
     prune_stopword_candidates()
 
@@ -49,18 +87,8 @@ def detect(input_file, output_path, support=0.0, count=-1, thread_count=-1, over
 
     compute_flr(pos_sentences, thread_count)
 
-    # make the output path if it doens't exist
-    if not os.path.exists(output_path):
-        os.makedirs(output_path)
-    
-    with open(output_path + "/pos.json", 'w') as file_out:
-        json.dump(pos_sentences, file_out)
     with open(output_path + "/aspects.json" , 'w') as file_out:
         json.dump(aspect_data, file_out)
-    with open(output_path + "/doc_sent.json" , 'w') as file_out:
-        json.dump(document_sentences, file_out)
-    with open(output_path + "/sent_doc.json" , 'w') as file_out:
-        json.dump(sentence_documents, file_out)
     exit()
     
     #compute_a_score(pos_sentences)
