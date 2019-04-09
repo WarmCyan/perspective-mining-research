@@ -1,0 +1,6 @@
+#!/bin/bash
+
+source setup testsentimentanalysis
+docify -i $RAW/kaggle1 -o documents.json
+bootstrap-detection -i documents.json -o aspects -c 100 --support 0.01
+swn-sentiment-analysis -i aspects -o as_vectors 

@@ -42,6 +42,9 @@ def docify(input_folder, output_path, count=-1, content_column="content", overwr
             else:
                 article_table = pd.concat([article_table, article_table_in])
 
+    # TODO: include source and content in output
+    # TODO: randomize if count is less than 0
+
     # split every sentence from every article on '.'
     logging.info("Grabbing articles...")
     documents = []
