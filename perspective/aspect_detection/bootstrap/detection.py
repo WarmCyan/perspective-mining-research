@@ -38,6 +38,7 @@ def detect(input_file, output_path, support=0.0, count=-1, thread_count=-1, over
     # TODO: check if pos files already exist
     # TODO: the input document arrays should be of dictionaries with "text" being the content
     # TODO: really don't need count here, that should be property of docify not detection
+    # TODO: need to save more input parameters in log
 
     pos_sentences, sentences, document_sentences, sentence_documents = tokenize(docs) # NOTE: sentences never used
     generate_candidates(pos_sentences)

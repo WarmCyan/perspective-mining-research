@@ -44,6 +44,7 @@ def docify(input_folder, output_path, count=-1, content_column="content", overwr
 
     # TODO: include source and content in output
     # TODO: randomize if count is less than 0
+    # TODO: need to save more input parameters in log
 
     # split every sentence from every article on '.'
     logging.info("Grabbing articles...")
