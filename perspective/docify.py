@@ -6,6 +6,7 @@
 # (it's specific preprocessing for that dataset, so it should probably go somewhere else
 
 import argparse
+import random
 import os
 import logging
 import json
@@ -54,6 +55,10 @@ def docify(input_folder, output_path, count=-1, content_column="content", overwr
             break
 
         documents.append(article)
+
+    if count != -1:
+        logging.info("Shuffling %i subset of documents for output...", count)
+        random.shuffle(documents)
 
     # write out the file
     logging.info("Saving document data to '%s'", output_path)

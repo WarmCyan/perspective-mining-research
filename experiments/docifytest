@@ -1,5 +1,6 @@
 #!/bin/bash
 
-source setup testdoc
-docify -i $RAW/kaggle1 -o documents.json
-bootstrap-detection -i documents.json -o aspects -c 100
+source setup testdoc2
+docify -i $RAW/kaggle1 -o documents.json -c 100
+tokenization -i documents.json -o tokens
+bootstrap-detection -i tokens -o aspects

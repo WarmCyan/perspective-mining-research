@@ -23,60 +23,33 @@ from perspective import utility
 aspect_data = {}
 
 
-def detect(input_file, output_path, support=0.0, count=-1, thread_count=-1, overwrite=False):
+def detect(input_path, output_path, support=0.0, thread_count=-1, overwrite=False):
     global aspect_data
-    logging.info("Aspect detection requested on document set '%s'...", input_file)
+    logging.info("Aspect detection requested on tokenized documents '%s'...", input_path)
     logging.info("(Support level: %f)", support)
 
     if not utility.check_output_necessary(output_path + "/aspects.json", overwrite):
         return
 
-    with open(input_file, 'r') as infile:
-        docs = json.load(infile)
-
-    if count > 0: docs = docs[0:count]
-
     # TODO: the input document arrays should be of dictionaries with "text" being the content
     # TODO: really don't need count here, that should be property of docify not detection
 
-    pos_path = output_path + "/pos.json"
-    doc_sent_path = output_path + "/doc_sent.json"
-    sent_doc_path = output_path + "/sent_doc.json"
+    pos_path = input_path + "/pos.json"
+    doc_sent_path = input_path + "/doc_sent.json"
+    sent_doc_path = input_path + "/sent_doc.json"
 
-    logging.info("Checking for cached tokenization information...")
-    pos_needed = True
-    doc_sent_needed = True
-    sent_doc_needed = True
-    if not utility.check_output_necessary(pos_path, overwrite):
-        pos_needed = False
-    if not utility.check_output_necessary(doc_sent_path, overwrite):
-        doc_sent_needed = False
-    if not utility.check_output_necessary(sent_doc_path, overwrite):
-        sent_doc_needed = False
-        
     # make the output path if it doens't exist
     if not os.path.exists(output_path):
         os.makedirs(output_path)
-
-    if pos_needed or doc_sent_needed or sent_doc_needed:
-        pos_sentences, sentences, document_sentences, sentence_documents = tokenize(docs) # NOTE: sentences never used
-    
-        logging.info("Saving tokenization information...")
-        with open(pos_path, 'w') as file_out:
-            json.dump(pos_sentences, file_out)
-        with open(doc_sent_path, 'w') as file_out:
-            json.dump(document_sentences, file_out)
-        with open(sent_doc_path, 'w') as file_out:
-            json.dump(sentence_documents, file_out)
-    else:
-        # load in 
-        logging.info("Loading tokenization information...")
-        with open(pos_path, 'r') as file_in:
-            pos_sentences = json.load(file_in)
-        with open(doc_sent_path, 'r') as file_in:
-            document_sentences = json.load(file_in)
-        with open(sent_doc_path, 'r') as file_in:
-            sentence_documents = json.load(file_in)
+        
+    # load in 
+    logging.info("Loading tokenization information...")
+    with open(pos_path, 'r') as file_in:
+        pos_sentences = json.load(file_in)
+    with open(doc_sent_path, 'r') as file_in:
+        document_sentences = json.load(file_in)
+    with open(sent_doc_path, 'r') as file_in:
+        sentence_documents = json.load(file_in)
     
     generate_candidates(pos_sentences)
     prune_stopword_candidates()
@@ -89,7 +62,7 @@ def detect(input_file, output_path, support=0.0, count=-1, thread_count=-1, over
     with open(output_path + "/aspects.json" , 'w') as file_out:
         json.dump(aspect_data, file_out)
     exit()
-    
+
     #compute_a_score(pos_sentences)
 
     # testing just what's top and what isn't
@@ -98,46 +71,6 @@ def detect(input_file, output_path, support=0.0, count=-1, thread_count=-1, over
         yep = aspect_data[thing]
         print(yep["pos"], yep["ascore"])
 
-
-
-# take in a list of documents, and turn into POS sentences
-def tokenize(docs):
-    sentences = []
-    pos_sentences = []
-
-    # TODO: this is probably a terrible way of doing this...
-    document_sentences = []
-    sentence_documents = []
-
-    logging.info("Sentencifying documents...")
-    sentence_index_start = 0
-    doc_index = 0
-    for doc in tqdm(docs):
-
-        # tokenize
-        local_sentences = nltk.sent_tokenize(doc)
-        count = len(local_sentences)
-
-        # add the associated sentence id's to the document sentences
-        document_sentences.append(list(range(sentence_index_start, sentence_index_start + count)))
-        sentence_index_start += count
-
-        # add the associated document id to the sentence_documents list
-        sentence_documents.extend([doc_index]*count)
-        doc_index += 1
-
-        # add the tokenized sentences
-        sentences.extend(local_sentences)
-
-    logging.info("Tokenizing sentences...")
-    for sentence in tqdm(sentences):
-        # pos tagger
-        words = nltk.word_tokenize(sentence)
-        words = [word.lower() for word in words if word.isalpha() and word is not "s"]
-        tagged = nltk.pos_tag(words)
-        pos_sentences.append(tagged)
-
-    return pos_sentences, sentences, document_sentences, sentence_documents
 
 # TODO: definitely move out
 def generate_patterns():
@@ -365,4 +298,4 @@ if __name__ == "__main__":
     utility.init_logging(ARGS.log_path)
     input_path, output_path = utility.fix_paths(ARGS.experiment_path, ARGS.input_path, ARGS.output_path)
 
-    detect(input_path, output_path, ARGS.support, ARGS.count, ARGS.workers, ARGS.overwrite)
+    detect(input_path, output_path, ARGS.support, ARGS.workers, ARGS.overwrite)
