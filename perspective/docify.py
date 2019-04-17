@@ -17,7 +17,7 @@ import pandas as pd
 import utility
 
 
-def docify(input_folder, output_path, count=-1, content_column="content", overwrite=False):
+def docify(input_folder, output_path, count=-1, content_column="content", source_column="publication", overwrite=False):
     """Create a file of documents from all csv files in a folder
 
     A count of -1 means output _all_ documents.
@@ -50,11 +50,11 @@ def docify(input_folder, output_path, count=-1, content_column="content", overwr
     # split every sentence from every article on '.'
     logging.info("Grabbing articles...")
     documents = []
-    for article in tqdm(article_table[content_column]):
+    for (idx, row) in tqdm(article_table.iterrows()):
         if count != -1 and len(documents) > count:
             break
 
-        documents.append(article)
+        documents.append({"text": row.loc[content_column], "source": row.loc[source_column]})
 
     if count != -1:
         logging.info("Shuffling %i subset of documents for output...", count)
@@ -85,6 +85,16 @@ def parse():
         metavar="<str>",
         help="The name of the column with the article text",
     )
+    
+    parser.add_argument(
+        "--source-column",
+        dest="source_column",
+        type=str,
+        required=False,
+        default="content",
+        metavar="<str>",
+        help="The name of the column with the article source",
+    )
 
     cmd_args = parser.parse_args()
     return cmd_args
@@ -94,4 +104,4 @@ if __name__ == "__main__":
     utility.init_logging(ARGS.log_path)
     input_path, output_path = utility.fix_paths(ARGS.experiment_path, ARGS.input_path, ARGS.output_path)
 
-    docify(input_path, output_path, ARGS.count, ARGS.column, ARGS.overwrite)
+    docify(input_path, output_path, ARGS.count, ARGS.column, ARGS.source_column, ARGS.overwrite)

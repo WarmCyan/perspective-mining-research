@@ -59,6 +59,7 @@ def detect(input_path, output_path, support=0.0, thread_count=-1, overwrite=Fals
 
     compute_flr(pos_sentences, thread_count)
 
+    logging.info("Saving aspect data...")
     with open(output_path + "/aspects.json" , 'w') as file_out:
         json.dump(aspect_data, file_out)
     exit()
@@ -183,7 +184,8 @@ def compute_flr(pos_sentences, thread_count=-1):
 
         # run flr calculation in parallel
         for rank in range(0, p):
-            pool.apply_async(compute_flr_partition, args=(d, pos_sentences, rank, p), callback=collect_flr)
+            result = pool.apply_async(compute_flr_partition, args=(d, pos_sentences, rank, p), callback=collect_flr)
+            result.get()
 
         pool.close()
         pool.join()

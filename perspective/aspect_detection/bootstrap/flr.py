@@ -32,6 +32,7 @@ def compute_lr_count(pos_sentences, aspect):
 
 def lr_i_calc(pos_sentences, aspect_part, l_index, r_index):
     """Compute the individual LR for a word in an aspect."""
+    compute_lr_count(pos_sentences, aspect_part)
     if aspect_part not in lr_counts.keys():
         compute_lr_count(pos_sentences, aspect_part)
 
@@ -44,7 +45,7 @@ def lr_calc(pos_sentences, aspect):
     l_index = 1
     r_index = len(aspect)
     for part in aspect:
-        product *= lr_i_calc(pos_sentences, part, l_index, r_index)
+        product *= lr_i_calc(pos_sentences, part[0], l_index, r_index)
         l_index += 1
         r_index -= 1 # TODO: ensure you did this right and there's no off-by-one thing
 

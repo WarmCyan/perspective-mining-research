@@ -39,7 +39,7 @@ def tokenize(input_file, output_path, count=-1, overwrite=False):
     for doc in tqdm(docs):
 
         # tokenize
-        local_sentences = nltk.sent_tokenize(doc)
+        local_sentences = nltk.sent_tokenize(doc['text'])
         count = len(local_sentences)
 
         # add the associated sentence id's to the document sentences
