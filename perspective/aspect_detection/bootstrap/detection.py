@@ -183,10 +183,15 @@ def compute_flr(pos_sentences, thread_count=-1):
         logging.info("Computing FLR scores on %i cores...", p)
 
         # run flr calculation in parallel
+        results = []
         for rank in range(0, p):
             result = pool.apply_async(compute_flr_partition, args=(d, pos_sentences, rank, p), callback=collect_flr)
+            #result.get()
+            #results.append(result)
+            
+        for result in results:
             result.get()
-
+        
         pool.close()
         pool.join()
 
@@ -201,6 +206,8 @@ def collect_flr(result):
     global aspect_data
 
     # https://www.machinelearningplus.com/python/parallel-processing-python/
+    #print("Result:")
+    #print(result)
     
     for key in result.keys():
         aspect_data[key]["flr"] = result[key]

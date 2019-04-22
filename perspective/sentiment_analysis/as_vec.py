@@ -14,7 +14,7 @@ from perspective import utility
 #from perspective import utility
 
 # NOTE: expecting an aspects.json, pos.json, sent_doc.json, doc_sent.json
-def create_as_vectors(input_path, output_path, minimum_flr=10.0, overwrite=False):
+def create_as_vectors(input_path, tokens_path, output_path, minimum_flr=10.0, overwrite=False):
     logging.info("Aspect-sentiment vectors requested for collection at '%s'...", input_path)
 
     nltk.download('sentiwordnet')
@@ -30,15 +30,15 @@ def create_as_vectors(input_path, output_path, minimum_flr=10.0, overwrite=False
 
     pos_sentences = []
     logging.info("Loading pos sentences...")
-    with open(input_path + "/pos.json") as in_file:
+    with open(tokens_path + "/pos.json") as in_file:
         pos_sentences = json.load(in_file)
 
     logging.info("Loading sentence document associations...")
-    with open(input_path + "/sent_doc.json") as in_file:
+    with open(tokens_path + "/sent_doc.json") as in_file:
         sentence_documents = json.load(in_file)
 
     logging.info("Loading document sentence associations...")
-    with open(input_path + "/doc_sent.json") as in_file:
+    with open(tokens_path + "/doc_sent.json") as in_file:
         document_sentences = json.load(in_file)
 
     # TODO: this needs to be moved elsewhere
@@ -175,6 +175,16 @@ def parse():
     parser = utility.add_common_parsing(parser)
 
     parser.add_argument(
+        "-t",
+        "--tokens",
+        dest="tokens_path",
+        type=str,
+        required=False,
+        metavar="<str>",
+        help="Input path of tokenization data",
+    )
+
+    parser.add_argument(
         "-f",
         "--flr",
         dest="flr",
@@ -192,5 +202,6 @@ if __name__ == "__main__":
     ARGS = parse()
     utility.init_logging(ARGS.log_path)
     input_path, output_path = utility.fix_paths(ARGS.experiment_path, ARGS.input_path, ARGS.output_path)
+    token_input_path, output_path = utility.fix_paths(ARGS.experiment_path, ARGS.tokens_path, ARGS.output_path)
 
-    create_as_vectors(input_path, output_path, ARGS.flr, ARGS.overwrite)
+    create_as_vectors(input_path, token_input_path, output_path, ARGS.flr, ARGS.overwrite)

@@ -16,7 +16,7 @@ def compute_lr_count(pos_sentences, aspect):
         for j in range(1, len(pos_sentences[i])-1):
 
             # is this the aspect we're looking for?
-            if pos_sentences[i][j] == aspect:
+            if pos_sentences[i][j][0] == aspect:
                 l_type = pos_sentences[i][j-1][1]
                 r_type = pos_sentences[i][j+1][1]
 
