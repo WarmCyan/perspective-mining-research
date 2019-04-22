@@ -3,4 +3,5 @@
 source setup testdoc2
 docify -i $RAW/kaggle1 -o documents.json -c 100
 tokenization -i documents.json -o tokens
-bootstrap-detection -i tokens -o aspects --overwrite
+bootstrap-detection -i tokens -o aspects
+tfidfify -i documents.json -o tfidf.json --overwrite
