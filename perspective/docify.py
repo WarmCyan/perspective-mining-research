@@ -91,7 +91,7 @@ def parse():
         dest="source_column",
         type=str,
         required=False,
-        default="content",
+        default="publication",
         metavar="<str>",
         help="The name of the column with the article source",
     )
