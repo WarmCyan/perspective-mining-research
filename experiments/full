@@ -1,8 +1,8 @@
 #!/bin/bash
 
 source setup testsentimentanalysis_partial
-docify -i $RAW/kaggle1 -o documents.json -c 100
+docify -i $RAW/kaggle1 -o documents.json -c 5000
 tokenization -i documents.json -o tokens
-bootstrap-detection -i tokens -o aspects --support 0.01 -w 1 --overwrite
+bootstrap-detection -i tokens -o aspects --support 0.01 -w 4 --overwrite
 tfidfify -i documents.json -o tfidif.json
 swn-sentiment-analysis -i aspects -o as_vectors -t tokens --overwrite
