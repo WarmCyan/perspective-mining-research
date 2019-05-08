@@ -28,16 +28,18 @@ def tfidf(input_path, output_path, overwrite=False):
         corpus.append(document["text"])
 
     logging.info("Running TF-IDF...")
-    vectorizer = TfidfVectorizer()
+    vectorizer = TfidfVectorizer(max_features=5000)
     vectorizer.fit(corpus)
     tfidf_matrix = vectorizer.transform(corpus)
     #tfidf_matrix = vectorizer.fit_transform(corpus)
 
     logging.info("Saving TF-IDF matrix...")
-    df = pd.DataFrame.from_records(tfidf_matrix.todense())
-    #df.columns = vectorizer.get_feature_names()
+    with open(output_path, 'w') as outfile:
+        json.dump(tfidf_matrix.todense().tolist(), outfile)
+    #df = pd.DataFrame.from_records(tfidf_matrix.todense())
+    ##df.columns = vectorizer.get_feature_names()
     
-    df.to_json(output_path)
+    #df.to_json(output_path)
     
 def parse():
     """Handle all command line argument parsing.
