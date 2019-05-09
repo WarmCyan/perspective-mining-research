@@ -1,8 +1,9 @@
 #!/bin/bash
 
 source setup testsentimentanalysis_partial
-docify -i $RAW/kaggle1 -o documents.json -c 5000
+docify -i $RAW/kaggle1 -o documents.json -c 5000 --keywords "trump,Trump"
 tokenization -i documents.json -o tokens
-bootstrap-detection -i tokens -o aspects --support 0.01 -w 4 
+bootstrap-detection -i tokens -o aspects --support 0.005 -w 4 
 tfidfify -i documents.json -o tfidif.json --overwrite
 swn-sentiment-analysis -i aspects -o as_vectors -t tokens 
+report --documents

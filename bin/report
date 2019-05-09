@@ -1,0 +1,7 @@
+#!/bin/bash
+
+pushd ../perspective
+
+report.py --log $LOG_FILE --experiment_dir $EXPERIMENT "$@"
+
+popd

@@ -17,7 +17,7 @@ import pandas as pd
 import utility
 
 
-def docify(input_folder, output_path, count=-1, content_column="content", source_column="publication", overwrite=False):
+def docify(input_folder, output_path, count=-1, content_column="content", source_column="publication", keywords=[], overwrite=False):
     """Create a file of documents from all csv files in a folder
 
     A count of -1 means output _all_ documents.
@@ -43,6 +43,21 @@ def docify(input_folder, output_path, count=-1, content_column="content", source
             else:
                 article_table = pd.concat([article_table, article_table_in])
 
+    # target documents to keywords if supplied
+    if len(keywords) > 0 and keywords[0] != "":
+        tmp_table = article_table
+        logging.info("Targeting document set to keywords %s...", str(keywords))
+        for word in keywords:
+            tmp_table = pd.concat([tmp_table, article_table[article_table[content_column].str.contains(word)]])
+
+        tmp_table = tmp_table.drop_duplicates()
+        article_table = tmp_table
+        
+    # randomly shuffling
+    if count != -1:
+        logging.info("Shuffling %i subset of documents for output...", count)
+        article_table = article_table.sample(count, random_state=42)
+
     # TODO: include source and content in output
     # TODO: randomize if count is less than 0
     # TODO: need to save more input parameters in log
@@ -56,9 +71,10 @@ def docify(input_folder, output_path, count=-1, content_column="content", source
 
         documents.append({"text": row.loc[content_column], "source": row.loc[source_column]})
 
-    if count != -1:
-        logging.info("Shuffling %i subset of documents for output...", count)
-        random.shuffle(documents)
+    # this is literally pointless...the subset has already been taken at this point
+    #if count != -1:
+        #logging.info("Shuffling %i subset of documents for output...", count)
+        #random.shuffle(documents)
 
     # write out the file
     logging.info("Saving document data to '%s'", output_path)
@@ -95,6 +111,16 @@ def parse():
         metavar="<str>",
         help="The name of the column with the article source",
     )
+    
+    parser.add_argument(
+        "--keywords",
+        dest="keywords",
+        type=str,
+        required=False,
+        default="",
+        metavar="<str>",
+        help="The set of words a document must contain",
+    )
 
     cmd_args = parser.parse_args()
     return cmd_args
@@ -104,4 +130,7 @@ if __name__ == "__main__":
     utility.init_logging(ARGS.log_path)
     input_path, output_path = utility.fix_paths(ARGS.experiment_path, ARGS.input_path, ARGS.output_path)
 
-    docify(input_path, output_path, ARGS.count, ARGS.column, ARGS.source_column, ARGS.overwrite)
+    keywords = ARGS.keywords.split(",")
+
+
+    docify(input_path, output_path, ARGS.count, ARGS.column, ARGS.source_column, keywords, ARGS.overwrite)
