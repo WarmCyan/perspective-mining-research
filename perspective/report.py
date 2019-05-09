@@ -32,7 +32,7 @@ def report_documents(path, output_path):
         out_file.write("Documents report generated on " + str(datetime.datetime.now()))
         out_file.write("\n===================================\n")
 
-        out_file.write("\n\nNumber of articles: " + df.shape[0] + "\n\n")
+        out_file.write("\n\nNumber of articles: " + str(df.shape[0]) + "\n\n")
         out_file.write("Sources:\n")
         out_file.write(str(df.source.value_counts()) + "\n")
 
@@ -53,11 +53,15 @@ def parse():
         metavar="<str>",
         help="The input path for the documents json",
     )
+    
+    cmd_args = parser.parse_args()
+    return cmd_args
 
 if __name__ == "__main__":
     ARGS = parse()
     utility.init_logging(ARGS.log_path)
     input_path, output_path = utility.fix_paths(ARGS.experiment_path, ARGS.input_path, ARGS.output_path)
+    documents_path, output_path = utility.fix_paths(ARGS.experiment_path, ARGS.documents, ARGS.output_path)
 
 
-    gen_report(input_path, output_path, ARGS.documents, overwrite=ARGS.overwrite)
+    gen_report(input_path, output_path, documents_path, overwrite=ARGS.overwrite)

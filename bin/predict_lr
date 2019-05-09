@@ -1,0 +1,7 @@
+#!/bin/bash
+
+pushd ../perspective
+
+predict_lr.py --log $LOG_FILE --experiment-dir $EXPERIMENT "$@"
+
+popd

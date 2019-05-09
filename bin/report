@@ -2,6 +2,6 @@
 
 pushd ../perspective
 
-report.py --log $LOG_FILE --experiment_dir $EXPERIMENT "$@"
+report.py --log $LOG_FILE --experiment-dir $EXPERIMENT "$@"
 
 popd

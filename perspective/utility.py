@@ -13,7 +13,7 @@ def check_output_necessary(output_path, overwrite):
 
     logging.debug("Checking for existence of '%s'...", output_path)
 
-    if os.path.isfile(output_path):
+    if os.path.exists(output_path):
         logging.debug("Output found.")
         logging.info("Cached version found.")
 
