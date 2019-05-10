@@ -7,12 +7,12 @@ import os
 import pandas as pd
 
 from sklearn.model_selection import train_test_split
-from sklearn.linear_model import LogisticRegression
+from sklearn.svm import SVC
 
 import utility
 
 
-def predict_lr(input_file, output_path, document_set, name=''):
+def predict_svm(input_file, output_path, document_set, name=''):
     logging.info("Logistic regression model requested on %s...", input_file)
 
     logging.info("Loading document set...")
@@ -30,7 +30,7 @@ def predict_lr(input_file, output_path, document_set, name=''):
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=.2, random_state=42)
 
     logging.info("Training...")
-    clf = LogisticRegression(random_state=42, multi_class='ovr')
+    clf = SVC()
     clf.fit(X_train, y_train)
 
     logging.info("Scoring...")
@@ -81,4 +81,4 @@ if __name__ == "__main__":
     input_path, output_path = utility.fix_paths(ARGS.experiment_path, ARGS.input_path, ARGS.output_path)
     documents_path, output_path = utility.fix_paths(ARGS.experiment_path, ARGS.documents, ARGS.output_path)
 
-    predict_lr(input_path, output_path, documents_path, ARGS.name)
+    predict_svm(input_path, output_path, documents_path, ARGS.name)

@@ -8,6 +8,8 @@ import argparse
 import math
 
 from tqdm import tqdm, trange
+from collections import OrderedDict
+from itertools import islice
 
 import flr
 import util
@@ -23,7 +25,7 @@ from perspective import utility
 aspect_data = {}
 
 
-def detect(input_path, output_path, support=0.0, thread_count=-1, overwrite=False):
+def detect(input_path, output_path, support=0.0, target_count=-1, thread_count=-1, overwrite=False):
     global aspect_data
     logging.info("Aspect detection requested on tokenized documents '%s'...", input_path)
     logging.info("(Support level: %f)", support)
@@ -59,18 +61,25 @@ def detect(input_path, output_path, support=0.0, thread_count=-1, overwrite=Fals
 
     compute_flr(pos_sentences, thread_count)
 
-    logging.info("Saving aspect data...")
-    with open(output_path + "/aspects.json" , 'w') as file_out:
-        json.dump(aspect_data, file_out)
-    exit()
+    #logging.info("Saving aspect data...")
+    #with open(output_path + "/aspects.json" , 'w') as file_out:
+    #    json.dump(aspect_data, file_out)
+    #exit()
 
-    #compute_a_score(pos_sentences)
+    compute_a_score(pos_sentences)
 
     # testing just what's top and what isn't
-    sorted_aspects = sorted(aspect_data, key = lambda x: aspect_data[x]["ascore"])
-    for thing in sorted_aspects:
-        yep = aspect_data[thing]
-        print(yep["pos"], yep["ascore"])
+    sorted_aspects = OrderedDict(sorted(aspect_data, key = lambda x: aspect_data[x]["ascore"]))
+    if target_count > 0 and len(sorted_aspects.keys()) > target_count:
+        sorted_aspects = islice(sorted_aspects.items(), target_count)
+        
+    #for thing in sorted_aspects:
+        #yep = aspect_data[thing]
+        #print(yep["pos"], yep["ascore"])
+
+    logging.info("Saving aspect data...")
+    with open(output_path + "/aspects.json" , 'w') as file_out:
+        json.dump(sorted_aspects, file_out)
 
 
 # TODO: definitely move out
@@ -91,7 +100,7 @@ def generate_patterns():
             build = ["DT"]
             build.extend(pattern)
             patterns.append(build)
-    
+
     return patterns
 
 def generate_candidates(pos_sentences):
@@ -102,10 +111,10 @@ def generate_candidates(pos_sentences):
     for pos_sentence in tqdm(pos_sentences):
 
         # search for all the patterns
-        detect_sentence_aspects(pos_sentence, ["NN", "NNS"], index, False, 1)
-        detect_sentence_aspects(pos_sentence, ["NN", "NNS"], index, False, 2)
-        detect_sentence_aspects(pos_sentence, ["NN", "NNS"], index, False, 3)
-        detect_sentence_aspects(pos_sentence, ["NN", "NNS"], index, False, 4)
+        detect_sentence_aspects(pos_sentence, ["NN", "NNS", "NNP"], index, False, 1)
+        detect_sentence_aspects(pos_sentence, ["NN", "NNS", "NNP"], index, False, 2)
+        detect_sentence_aspects(pos_sentence, ["NN", "NNS", "NNP"], index, False, 3)
+        detect_sentence_aspects(pos_sentence, ["NN", "NNS", "NNP"], index, False, 4)
 
         for pattern in patterns:
             detect_sentence_aspects(pos_sentence, pattern, index, True)
@@ -249,7 +258,7 @@ def prune_stopword_candidates():
 def prune_by_support(min_support, document_sentences, sentence_documents):
     global aspect_data
 
-    logging.info("Pruning candidates by minimum document support %i...", min_support)
+    logging.info("Pruning candidates by minimum document support %f...", min_support)
 
     minimum_count = int(min_support * len(document_sentences))
     logging.info("Minimum count of %i needed is %i", len(document_sentences), minimum_count)
@@ -271,8 +280,6 @@ def prune_by_support(min_support, document_sentences, sentence_documents):
 
 def compute_a_score(pos_sentences):
     global aspect_data
-
-    
 
     logging.info("Computing A-scores...")
 
@@ -298,6 +305,16 @@ def parse():
         metavar="<float>",
         help="The minimum percentage of documents an aspect must appear in",
     )
+    
+    parser.add_argument(
+        "--target-count",
+        dest="target_count",
+        type=int,
+        required=False,
+        default=-1,
+        metavar="<int>",
+        help="The target number of aspects",
+    )
 
     cmd_args = parser.parse_args()
     return cmd_args
@@ -307,4 +324,4 @@ if __name__ == "__main__":
     utility.init_logging(ARGS.log_path)
     input_path, output_path = utility.fix_paths(ARGS.experiment_path, ARGS.input_path, ARGS.output_path)
 
-    detect(input_path, output_path, ARGS.support, ARGS.workers, ARGS.overwrite)
+    detect(input_path, output_path, ARGS.support, ARGS.target_count, ARGS.workers, ARGS.overwrite)

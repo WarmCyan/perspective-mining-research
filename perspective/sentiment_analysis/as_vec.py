@@ -5,6 +5,7 @@ import nltk
 import logging
 import argparse
 
+from collections import OrderedDict
 from nltk.corpus import sentiwordnet as swn
 from tqdm import tqdm
 
@@ -26,7 +27,7 @@ def create_as_vectors(input_path, tokens_path, output_path, minimum_flr=10.0, ov
     aspect_data = {}
     logging.info("Loading aspects...")
     with open(input_path + "/aspects.json") as in_file:
-        aspect_data = json.load(in_file)
+        aspect_data = OrderedDict(json.load(in_file))
 
     pos_sentences = []
     logging.info("Loading pos sentences...")
