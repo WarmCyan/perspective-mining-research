@@ -66,47 +66,14 @@ def parse():
     Returns the parsed args object from the parser
     """
     parser = argparse.ArgumentParser()
-
-    parser.add_argument(
-        "-o",
-        "--output",
-        dest="output_path",
-        type=str,
-        required=True,
-        metavar="<str>",
-        help="The name and path for the output sentence data",
-    )
-    parser.add_argument(
-        "-i",
-        "--input",
-        dest="input_folder",
-        type=str,
-        required=True,
-        metavar="<str>",
-        help="The path to the folder containing the kaggle1 raw input data",
-    )
-    parser.add_argument(
-        "--overwrite",
-        dest="overwrite",
-        action="store_true",
-        help="Specify this flag to overwrite existing output data if they exist",
-    )
-    parser.add_argument(
-        "-c",
-        "--count",
-        dest="count",
-        type=int,
-        required=False,
-        default=-1,
-        metavar="<int>",
-        help="The number of sentences to use",
-    )
+    parser = utility.add_common_parsing(parser)
 
     cmd_args = parser.parse_args()
     return cmd_args
 
 if __name__ == "__main__":
-    logging.basicConfig(format="%(asctime)s : %(levelname)s : %(message)s", level=logging.INFO)
-
     ARGS = parse()
-    sentencify(ARGS.input_folder, ARGS.output_path, ARGS.count, ARGS.overwrite)
+    utility.init_logging(ARGS.log_path)
+    input_path, output_path = utility.fix_paths(ARGS.experiment_path, ARGS.input_path, ARGS.output_path)
+    
+    sentencify(input_path, output_path, ARGS.count, ARGS.overwrite)

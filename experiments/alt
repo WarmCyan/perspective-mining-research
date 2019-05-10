@@ -1,0 +1,8 @@
+#!/bin/bash
+
+source setup attnmodel
+
+sentencify -i $RAW/kaggle1 -o w2v_sentences
+word2vec -i w2v_sentences -o w2v_model --workers 4
+
+neural-attn-model --emb "$EXPERIMENT/w2v_model" -i "$EXPERIMENT/w2v_sentences" -o "$EXPERIMENT/attn_model" --aspect-size 5000

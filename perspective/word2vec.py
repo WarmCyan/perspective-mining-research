@@ -1,5 +1,7 @@
-
 #!/usr/bin/env python
+
+
+
 # code drawn in part from https://github.com/harpaj/Unsupervised-Aspect-Extraction
 
 """This script takes a file of input data and outputs a word2vec model."""
@@ -36,6 +38,7 @@ def run(
     overwrite=False,
 ):
     """The primary function for generating the word2vec model."""
+    print("Yep 2")
 
     logging.info("Word2vec model requested for input '%s', output '%s'", input_path, output_path)
 
@@ -72,26 +75,7 @@ def parse():
     Returns the parsed args object from the parser
     """
     parser = argparse.ArgumentParser()
-
-    # input and output files
-    parser.add_argument(
-        "-o",
-        "--output",
-        dest="output_path",
-        type=str,
-        required=True,
-        metavar="<str>",
-        help="The name and path for the output word2vec model",
-    )
-    parser.add_argument(
-        "-i",
-        "--input",
-        dest="input_path",
-        type=str,
-        required=True,
-        metavar="<str>",
-        help="The path to the file of input data",
-    )
+    parser = utility.add_common_parsing(parser)
 
     # model parameters
     parser.add_argument(
@@ -122,15 +106,6 @@ def parse():
         help="min_count for word2vec (default=10)",
     )
     parser.add_argument(
-        "--workers",
-        dest="workers",
-        type=int,
-        metavar="<int>",
-        required=False,
-        default=4,
-        help="Number of threads (default=4)",
-    )
-    parser.add_argument(
         "--epochs",
         dest="epochs",
         type=int,
@@ -139,28 +114,16 @@ def parse():
         default=2,
         help="Number of epochs (default=2)",
     )
-    parser.add_argument(
-        "--overwrite",
-        dest="overwrite",
-        action="store_true",
-        help="Specify this flag to overwrite existing output models if they exist",
-    )
 
     cmd_args = parser.parse_args()
     return cmd_args
 
 
 if __name__ == "__main__":
-    logging.basicConfig(format="%(asctime)s : %(levelname)s : %(message)s", level=logging.INFO)
-
+    print("??")
     ARGS = parse()
-    run(
-        ARGS.input_path,
-        ARGS.output_path,
-        ARGS.embed_dim,
-        ARGS.window,
-        ARGS.min_count,
-        ARGS.workers,
-        ARGS.epochs,
-        ARGS.overwrite,
-    )
+    utility.init_logging(ARGS.log_path)
+    input_path, output_path = utility.fix_paths(ARGS.experiment_path, ARGS.input_path, ARGS.output_path)
+    print("Yep")
+    
+    run(input_path, output_path, ARGS.embed_dim, ARGS.window, ARGS.min_count, ARGS.workers, ARGS.epochs, ARGS.overwrite)

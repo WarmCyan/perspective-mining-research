@@ -1,0 +1,7 @@
+#!/bin/bash
+
+pushd ../perspective/aspect_detection/neural_attn_model
+
+( source bin/activate; cd code; python train.py "$@" )
+
+popd

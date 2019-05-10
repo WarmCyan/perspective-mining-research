@@ -3,11 +3,11 @@
 source setup testsentimentanalysis_partial
 docify -i $RAW/kaggle1 -o documents.json -c 5000 --keywords "trump,Trump"
 tokenization -i documents.json -o tokens
-bootstrap-detection -i tokens -o aspects --support 0.0025 -w 4 
+bootstrap-detection -i tokens -o aspects --support 0.05 -w 4 
 tfidfify -i documents.json -o tfidif.json 
 swn-sentiment-analysis -i aspects -o as_vectors -t tokens 
 
-report --documents documents.json -i ./ -o ./
+report --documents documents.json --aspects aspects/aspects.json -i ./ -o ./
 
 predict_lr -i tfidif.json --documents documents.json -o results --name "tfidf_score"
 predict_lr -i as_vectors/doc_as_vectors.json --documents documents.json -o results --name "as_vec_score"

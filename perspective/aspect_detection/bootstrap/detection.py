@@ -61,10 +61,10 @@ def detect(input_path, output_path, support=0.0, target_count=-1, thread_count=-
 
     compute_flr(pos_sentences, thread_count)
 
-    #logging.info("Saving aspect data...")
-    #with open(output_path + "/aspects.json" , 'w') as file_out:
-    #    json.dump(aspect_data, file_out)
-    #exit()
+    logging.info("Saving aspect data...")
+    with open(output_path + "/aspects.json" , 'w') as file_out:
+        json.dump(aspect_data, file_out)
+    exit()
 
     compute_a_score(pos_sentences)
 
