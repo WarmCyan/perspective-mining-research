@@ -4,12 +4,16 @@ source setup testsentimentanalysis_partial
 docify -i $RAW/kaggle1 -o documents.json -c 5000 --keywords "trump,Trump"
 tokenization -i documents.json -o tokens
 bootstrap-detection -i tokens -o aspects --support 0.05 -w 4 
-tfidfify -i documents.json -o tfidif.json 
+tfidfify -i documents.json -o tfidf.json 
 swn-sentiment-analysis -i aspects -o as_vectors -t tokens 
 
 report --documents documents.json --aspects aspects/aspects.json -i ./ -o ./
 
-predict_lr -i tfidif.json --documents documents.json -o results --name "tfidf_score"
-predict_lr -i as_vectors/doc_as_vectors.json --documents documents.json -o results --name "as_vec_score"
+predict_lr -i tfidf.json --documents documents.json -o results --name "tfidf"
+predict_lr -i as_vectors/doc_as_vectors.json --documents documents.json -o results --name "as_vec"
+predict_lr -i tfidf.json --documents documents.json -o results --name "tfidf_us" --undersample
+predict_lr -i as_vectors/doc_as_vectors.json --documents documents.json -o results --name "as_vec_us" --undersample
+predict_lr -i tfidf.json --documents documents.json -o results --name "tfidf_os" --oversample
+predict_lr -i as_vectors/doc_as_vectors.json --documents documents.json -o results --name "as_vec_os" --oversample
 #predict_svm -i tfidif.json --documents documents.json -o results --name "tfidf_score"
 #predict_svm -i as_vectors/doc_as_vectors.json --documents documents.json -o results --name "as_vec_score"
