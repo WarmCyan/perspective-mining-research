@@ -45,13 +45,13 @@ def docify(input_folder, output_path, count=-1, content_column="content", source
 
     # target documents to keywords if supplied
     if len(keywords) > 0 and keywords[0] != "":
-        tmp_table = article_table
+        tmp_table = pd.DataFrame(columns=article_table.columns)
         logging.info("Targeting document set to keywords %s...", str(keywords))
         for word in keywords:
             tmp_table = pd.concat([tmp_table, article_table[article_table[content_column].str.contains(word)]])
 
         tmp_table = tmp_table.drop_duplicates()
-        article_table = tmp_table
+        article_table = tmp_table.copy()
         
     # randomly shuffling
     if count != -1:

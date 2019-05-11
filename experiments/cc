@@ -1,7 +1,7 @@
 #!/bin/bash
 
-source setup trumptarget
-docify -i $RAW/kaggle1 -o documents.json -c 5000 --keywords "trump,Trump"
+source setup climatetarget
+docify -i $RAW/kaggle1 -o documents.json -c 5000 --keywords "climate change,global warming,climate"
 tokenization -i documents.json -o tokens
 bootstrap-detection -i tokens -o aspects --support 0.05 -w 4 
 tfidfify -i documents.json -o tfidf.json 
