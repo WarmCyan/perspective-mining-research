@@ -27,19 +27,25 @@ def examine(input_file, output_path, document_set, model_path):
 
     X = features
     y = docs
-    
+
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=.2, random_state=42)
-    
+
     logging.info("Loading model...")
-    clf = pickle.load(open(model_path), 'rb')
+    clf = pickle.load(open(model_path, 'rb'))
 
     logging.info("Running predictions...")
     predictions = clf.predict_proba(X_test)
+    static_predictions = clf.predict(X_test)
     classes = clf.classes_
 
-    predictions_df = pd.DataFrame(predictions, columns=classes)
+    predictions_df = pd.DataFrame(predictions, index=X_test.index, columns=classes)
+    std_col_df = pd.DataFrame(predictions_df.std(axis=1), index=X_test.index, columns=["std"])
+    predictions_df = pd.concat([predictions_df, std_col_df], axis=1)
     
-    examine_df = pd.concat([y_test, predictions_df])
+    static_predictions_df = pd.DataFrame(static_predictions, index=X_test.index, columns=["predicted"])
+
+    examine_df_part = pd.concat([static_predictions_df, y_test], axis=1)
+    examine_df = pd.concat([examine_df_part, predictions_df], axis=1)
 
     logging.info("Storing examination table at %s", output_path)
     examine_df.to_csv(output_path)

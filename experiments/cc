@@ -9,8 +9,8 @@ swn-sentiment-analysis -i aspects -o as_vectors -t tokens --sd 1
 
 report --documents documents.json --aspects aspects/aspects.json -i ./ -o ./
 
-predict_lr -i as_vectors/doc_as_vectors --documents documents.json -o results --name "as_vec"
-examine_predictions -i as_vectors/doc_as_vectors --documents documents.json --model results/lr_as_vec_model -o ./as_vec_examine.csv
+predict_lr -i as_vectors/doc_as_vectors.json --documents documents.json -o results --name "as_vec"
+examine_predictions -i as_vectors/doc_as_vectors.json --documents documents.json --model results/lr_as_vec_model -o ./as_vec_examine.csv
 
 #predict_lr -i tfidf.json --documents documents.json -o results --name "tfidf"
 #predict_lr -i as_vectors/doc_as_vectors.json --documents documents.json -o results --name "as_vec"

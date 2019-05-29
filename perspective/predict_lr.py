@@ -103,7 +103,6 @@ def predict_lr(input_file, output_path, document_set, undersample=False, oversam
         clf = MLPClassifier(solver='lbfgs', hidden_layer_sizes=(200, 100), verbose=True, random_state=42, early_stopping=True, n_iter_no_change=10)
         
     clf.fit(X_train, y_train)
-    pickle.dump(clf, open(output_path + "/" + model_type + "_" + name + "_model", "wb"))
 
     logging.info("Scoring...")
     score = clf.score(X_test, y_test)
@@ -116,6 +115,8 @@ def predict_lr(input_file, output_path, document_set, undersample=False, oversam
     # make the output path if it doens't exist
     if not os.path.exists(output_path):
         os.makedirs(output_path)
+        
+    pickle.dump(clf, open(output_path + "/" + model_type + "_" + name + "_model", "wb"))
     
     with open(output_path + "/" + model_type + "_" + name + "_score", 'w') as out_file:
         out_file.write(str(score))
