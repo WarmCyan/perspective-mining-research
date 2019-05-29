@@ -5,6 +5,7 @@ import logging
 import json
 import os
 import pandas as pd
+import pickle
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -13,6 +14,7 @@ from sklearn.utils.multiclass import unique_labels
 
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression
+from sklearn.neural_network import MLPClassifier
 
 from imblearn.under_sampling import RandomUnderSampler
 from imblearn.over_sampling import SMOTE
@@ -67,7 +69,7 @@ def plot_confusion_matrix(y_true, y_pred, classes,
     fig.tight_layout()
     return fig, cm
 
-def predict_lr(input_file, output_path, document_set, undersample=False, oversample=False, name='', **kwargs):
+def predict_lr(input_file, output_path, document_set, undersample=False, oversample=False, name='', model_type="lr", **kwargs):
     logging.info("Logistic regression model requested on %s...", input_file)
 
     logging.info("Loading document set...")
@@ -94,8 +96,14 @@ def predict_lr(input_file, output_path, document_set, undersample=False, oversam
         X_train, y_train = sm.fit_resample(X_train, y_train)
 
     logging.info("Training...")
-    clf = LogisticRegression(random_state=42, multi_class='ovr')
+
+    if model_type == "lr":
+        clf = LogisticRegression(random_state=42, multi_class='ovr')
+    elif model_type == "mlp":
+        clf = MLPClassifier(solver='lbfgs', hidden_layer_sizes=(200, 100), verbose=True, random_state=42, early_stopping=True, n_iter_no_change=10)
+        
     clf.fit(X_train, y_train)
+    pickle.dump(clf, open(output_path + "/" + model_type + "_" + name + "_model", "wb"))
 
     logging.info("Scoring...")
     score = clf.score(X_test, y_test)
@@ -109,10 +117,10 @@ def predict_lr(input_file, output_path, document_set, undersample=False, oversam
     if not os.path.exists(output_path):
         os.makedirs(output_path)
     
-    with open(output_path + "/lr_" + name + "_score", 'w') as out_file:
+    with open(output_path + "/" + model_type + "_" + name + "_score", 'w') as out_file:
         out_file.write(str(score))
 
-    figure.savefig(output_path + "/lr_" + name + "_cm.png")
+    figure.savefig(output_path + "/" + model_type + "_" + name + "_cm.png")
     
     
 def parse():
@@ -142,6 +150,15 @@ def parse():
         help="the name to save",
     )
     parser.add_argument(
+        "--type",
+        dest="model_type",
+        type=str,
+        required=False,
+        default="lr",
+        metavar="<str>",
+        help="the type of model to use",
+    )
+    parser.add_argument(
         "--undersample",
         dest="undersample",
         action="store_true",
@@ -163,4 +180,4 @@ if __name__ == "__main__":
     input_path, output_path = utility.fix_paths(ARGS.experiment_path, ARGS.input_path, ARGS.output_path)
     documents_path, output_path = utility.fix_paths(ARGS.experiment_path, ARGS.documents, ARGS.output_path)
 
-    predict_lr(input_path, output_path, documents_path, ARGS.undersample, ARGS.oversample, ARGS.name)
+    predict_lr(input_path, output_path, documents_path, ARGS.undersample, ARGS.oversample, ARGS.name, ARGS.model_type)

@@ -4,6 +4,7 @@ import json
 import nltk
 import logging
 import argparse
+import scipy.stats
 
 from collections import OrderedDict
 from nltk.corpus import sentiwordnet as swn
@@ -15,7 +16,7 @@ from perspective import utility
 #from perspective import utility
 
 # NOTE: expecting an aspects.json, pos.json, sent_doc.json, doc_sent.json
-def create_as_vectors(input_path, tokens_path, output_path, minimum_flr=10.0, overwrite=False):
+def create_as_vectors(input_path, tokens_path, output_path, minimum_flr=10.0, sd=1, overwrite=False):
     logging.info("Aspect-sentiment vectors requested for collection at '%s'...", input_path)
 
     nltk.download('sentiwordnet')
@@ -88,27 +89,43 @@ def create_as_vectors(input_path, tokens_path, output_path, minimum_flr=10.0, ov
             # iterate on each side
             adjectives = []
             weights = [] # TODO: weight less the farther away from the word it is
-            for i in range(1, 6):
+            for i in range(1, 11):
                 left = aspect_index - i
                 right = aspect_index + len(pos_aspect) + i
 
                 # check for adjectives
                 if left >= 0:
                     if sentence[left][1] == "JJ":
-                        adjectives.append(sentence[left][0])
+                        weight = scipy.stats.norm(aspect_index, sd).pdf(left) 
+                        adjective = sentence[left][0]
+                        try:
+                            score = swn.senti_synset(adjective + ".a.01")
+                            aspect_score[0] += score.pos_score()*weight
+                            aspect_score[1] += score.neg_score()*weight
+                        except: continue
+                        
+                        #adjectives.append(sentence[left][0])
                         break
 
                 if right < len(sentence):
                     if sentence[right][1] == "JJ":
-                        adjectives.append(sentence[right][0])
+                        weight = scipy.stats.norm(aspect_index, sd).pdf(right) 
+                        adjective = sentence[right][0]
+                        try:
+                            score = swn.senti_synset(adjective + ".a.01")
+                            aspect_score[0] += score.pos_score()*weight
+                            aspect_score[1] += score.neg_score()*weight
+                        except: continue
+                        
+                        #adjectives.append(sentence[right][0])
 
             # go through each adjective and get a combined score
-            for adjective in adjectives:
-                try:
-                    score = swn.senti_synset(adjective + ".a.01")
-                    aspect_score[0] += score.pos_score()
-                    aspect_score[1] += score.neg_score()
-                except: continue
+            #for adjective in adjectives:
+            #    try:
+            #        score = swn.senti_synset(adjective + ".a.01")
+            #        aspect_score[0] += score.pos_score()
+            #        aspect_score[1] += score.neg_score()
+            #    except: continue
 
             pruned_data[aspect]["sentiments"][sentence_index] = aspect_score
 
@@ -117,8 +134,13 @@ def create_as_vectors(input_path, tokens_path, output_path, minimum_flr=10.0, ov
             except: 
                 print(sentence_index)
                 exit()
-            doc_as_vectors[sentence_doc][as_index] += aspect_score[0]
-            doc_as_vectors[sentence_doc][as_index] -= aspect_score[1]
+            
+            if aspect_score[0] > aspect_score[1]:
+                doc_as_vectors[sentence_doc][as_index] += aspect_score[0]
+            else:
+                doc_as_vectors[sentence_doc][as_index] -= aspect_score[1]
+            #doc_as_vectors[sentence_doc][as_index] += aspect_score[0]
+            #doc_as_vectors[sentence_doc][as_index] -= aspect_score[1]
 
 
         as_index += 1
@@ -195,6 +217,15 @@ def parse():
         metavar="<float>",
         help="The minimum flr of an aspect",
     )
+    parser.add_argument(
+        "--sd",
+        dest="sd",
+        type=float,
+        required=False,
+        default=1.0,
+        metavar="<float>",
+        help="The standard deviation for sentiment-target distance",
+    )
 
     cmd_args = parser.parse_args()
     return cmd_args
@@ -205,4 +236,4 @@ if __name__ == "__main__":
     input_path, output_path = utility.fix_paths(ARGS.experiment_path, ARGS.input_path, ARGS.output_path)
     token_input_path, output_path = utility.fix_paths(ARGS.experiment_path, ARGS.tokens_path, ARGS.output_path)
 
-    create_as_vectors(input_path, token_input_path, output_path, ARGS.flr, ARGS.overwrite)
+    create_as_vectors(input_path, token_input_path, output_path, ARGS.flr, ARGS.sd, ARGS.overwrite)
