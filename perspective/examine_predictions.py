@@ -5,6 +5,7 @@
 import argparse
 import datetime
 import logging
+import math
 import pandas as pd
 import json
 import pickle
@@ -13,6 +14,15 @@ from collections import OrderedDict
 
 from sklearn.model_selection import train_test_split
 import utility
+
+# expects a row (array) of probabilities
+def prediction_entropy(row):
+    entropy = 0
+    for col in row:
+        entropy += col * math.log10(col)
+
+    entropy *= -1
+    return entropy
 
 def examine(input_file, output_path, document_set, model_path):
     logging.info("Creating examination of output probabilities")
@@ -39,8 +49,12 @@ def examine(input_file, output_path, document_set, model_path):
     classes = clf.classes_
 
     predictions_df = pd.DataFrame(predictions, index=X_test.index, columns=classes)
-    std_col_df = pd.DataFrame(predictions_df.std(axis=1), index=X_test.index, columns=["std"])
-    predictions_df = pd.concat([predictions_df, std_col_df], axis=1)
+
+    entropy_col_df = pd.DataFrame(predictions_df.apply(lambda row: prediction_entropy(row), axis=1), index=X_test.index, columns=["entropy"])
+    predictions_df = pd.concat([predictions_df, entropy_col_df], axis=1)
+    
+    #std_col_df = pd.DataFrame(predictions_df.std(axis=1), index=X_test.index, columns=["std"])
+    #predictions_df = pd.concat([predictions_df, std_col_df], axis=1)
     
     static_predictions_df = pd.DataFrame(static_predictions, index=X_test.index, columns=["predicted"])
 
