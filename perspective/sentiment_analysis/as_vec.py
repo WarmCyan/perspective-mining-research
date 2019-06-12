@@ -15,6 +15,19 @@ sys.path.insert(0, os.path.abspath("../../"))
 from perspective import utility
 #from perspective import utility
 
+
+def evaluate_adjective(adjective):
+    result = [0.0, 0.0, 0.0]
+    
+    synsets = list(swn.senti_synsets(adjective, 'a'))
+    for synset in synsets:
+        result[0] += synset.pos_score()
+        result[1] += synset.neg_score()
+        result[2] += synset.obj_score()
+        
+    return result
+
+
 # NOTE: expecting an aspects.json, pos.json, sent_doc.json, doc_sent.json
 def create_as_vectors(input_path, tokens_path, output_path, minimum_flr=10.0, sd=1, overwrite=False):
     logging.info("Aspect-sentiment vectors requested for collection at '%s'...", input_path)
@@ -53,16 +66,19 @@ def create_as_vectors(input_path, tokens_path, output_path, minimum_flr=10.0, sd
     
     doc_as_vectors = []
     num_docs = len(document_sentences)
+    num_aspects = len(pruned_data.keys())
 
     # initialize vectors
     logging.info("Initializing document aspect-sentiment vectors...")
     for i in tqdm(range(0, num_docs)):
         doc_as_vectors.append([])
 
-        for j in range(0, len(pruned_data.keys())):
-            doc_as_vectors[i].append(0.0)
+        for j in range(0, num_aspects):
+            doc_as_vectors[i].append(0.0) # pos
+            doc_as_vectors[i].append(0.0) # neg
+            doc_as_vectors[i].append(0.0) # obj (not literally, but we get 3 times, so each one should be the index + len or index + len*2
 
-            
+
 
     # find sentiments
     as_index = 0
@@ -77,7 +93,7 @@ def create_as_vectors(input_path, tokens_path, output_path, minimum_flr=10.0, sd
         for sentence_index in pruned_data[aspect]["sentences"]:
             sentence = pos_sentences[sentence_index]
 
-            aspect_score = [0.0, 0.0] # pos = [0], neg = [1]
+            aspect_score = [0.0, 0.0, 0.0] # pos = [0], neg = [1], neutral = [2]
 
             # find the index of the aspect
             try:
@@ -96,12 +112,16 @@ def create_as_vectors(input_path, tokens_path, output_path, minimum_flr=10.0, sd
                 # check for adjectives
                 if left >= 0:
                     if sentence[left][1] == "JJ":
-                        weight = scipy.stats.norm(aspect_index, sd).pdf(left) 
+                        weight = scipy.stats.norm(aspect_index, sd).pdf(left)
                         adjective = sentence[left][0]
                         try:
-                            score = swn.senti_synset(adjective + ".a.01")
-                            aspect_score[0] += score.pos_score()*weight
-                            aspect_score[1] += score.neg_score()*weight
+                            score = evaluate_adjective(adjective)
+                            aspect_score[0] += score[0]*weight
+                            aspect_score[1] += score[1]*weight
+                            aspect_score[2] += score[2]*weight
+                            #score = swn.senti_synset(adjective + ".a.01")
+                            #aspect_score[0] += score.pos_score()*weight
+                            #aspect_score[1] += score.neg_score()*weight
                         except: continue
                         
                         #adjectives.append(sentence[left][0])
@@ -109,12 +129,16 @@ def create_as_vectors(input_path, tokens_path, output_path, minimum_flr=10.0, sd
 
                 if right < len(sentence):
                     if sentence[right][1] == "JJ":
-                        weight = scipy.stats.norm(aspect_index, sd).pdf(right) 
+                        weight = scipy.stats.norm(aspect_index, sd).pdf(right)
                         adjective = sentence[right][0]
                         try:
-                            score = swn.senti_synset(adjective + ".a.01")
-                            aspect_score[0] += score.pos_score()*weight
-                            aspect_score[1] += score.neg_score()*weight
+                            score = evaluate_adjective(adjective)
+                            aspect_score[0] += score[0]*weight
+                            aspect_score[1] += score[1]*weight
+                            aspect_score[2] += score[2]*weight
+                            #score = swn.senti_synset(adjective + ".a.01")
+                            #aspect_score[0] += score.pos_score()*weight
+                            #aspect_score[1] += score.neg_score()*weight
                         except: continue
                         
                         #adjectives.append(sentence[right][0])
@@ -131,14 +155,20 @@ def create_as_vectors(input_path, tokens_path, output_path, minimum_flr=10.0, sd
 
             try:
                 sentence_doc = sentence_documents[sentence_index]
-            except: 
+            except:
                 print(sentence_index)
                 exit()
+
+            doc_as_vectors[sentence_doc][as_index] += aspect_score[0]
+            doc_as_vectors[sentence_doc][as_index + num_aspects] += aspect_score[1]
+            doc_as_vectors[sentence_doc][as_index + num_aspects*2] += aspect_score[2]
+
             
-            if aspect_score[0] > aspect_score[1]:
-                doc_as_vectors[sentence_doc][as_index] += aspect_score[0]
-            else:
-                doc_as_vectors[sentence_doc][as_index] -= aspect_score[1]
+            #if aspect_score[0] > aspect_score[1]:
+            #    doc_as_vectors[sentence_doc][as_index] += aspect_score[0]
+            #else:
+            #    doc_as_vectors[sentence_doc][as_index] -= aspect_score[1]
+            
             #doc_as_vectors[sentence_doc][as_index] += aspect_score[0]
             #doc_as_vectors[sentence_doc][as_index] -= aspect_score[1]
 
