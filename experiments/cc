@@ -1,7 +1,7 @@
 #!/bin/bash
 
 source setup climatetarget_sa_updated
-docify -i $RAW/kaggle1 -o documents.json -c 5000 --keywords "climate change,global warming,climate"
+docify -i $RAW/kaggle1 -o documents.json -c 5000 --keywords "climate change,global warming,climate" --ignore-source "CNN,Buzzfeed News"
 tokenization -i documents.json -o tokens
 bootstrap-detection -i tokens -o aspects --support 0.05 -w 4 
 tfidfify -i documents.json -o tfidf.json 
@@ -11,6 +11,17 @@ report --documents documents.json --aspects aspects/aspects.json -i ./ -o ./
 
 predict_lr -i as_vectors/doc_as_vectors.json --documents documents.json -o results --name "as_vec"
 examine_predictions -i as_vectors/doc_as_vectors.json --documents documents.json --model results/lr_as_vec_model -o ./as_vec_examine.csv
+
+predict_lr -i as_vectors/doc_as_vectors.json --documents documents.json -o results --name "as_vec_balanced" --balanced
+predict_lr -i tfidf.json --documents documents.json -o results --name "tfidf"
+predict_lr -i tfidf.json --documents documents.json -o results --name "tfidf_balanced" --balanced
+
+add_lean -i documents.json -o documents_lean.json --bias-file $RAW/bias_data.json
+
+predict_lr -i as_vectors/doc_as_vectors.json --documents documents_lean.json -o results --name "as_vec_lean" --lean
+predict_lr -i as_vectors/doc_as_vectors.json --documents documents_lean.json -o results --name "as_vec_lean_balanced" --balanced --lean
+predict_lr -i tfidf.json --documents documents_lean.json -o results --name "tfidf_lean" --lean
+predict_lr -i tfidf.json --documents documents_lean.json -o results --name "tfidf_lean_balanced" --balanced --lean
 
 #predict_lr -i tfidf.json --documents documents.json -o results --name "tfidf"
 #predict_lr -i as_vectors/doc_as_vectors.json --documents documents.json -o results --name "as_vec"

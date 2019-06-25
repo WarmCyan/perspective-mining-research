@@ -69,7 +69,7 @@ def plot_confusion_matrix(y_true, y_pred, classes,
     fig.tight_layout()
     return fig, cm
 
-def predict_lr(input_file, output_path, document_set, undersample=False, oversample=False, name='', model_type="lr", **kwargs):
+def predict_lr(input_file, output_path, document_set, undersample=False, oversample=False, name='', model_type="lr", class_balance=False, predict_lean=False, **kwargs):
     logging.info("Logistic regression model requested on %s...", input_file)
 
     logging.info("Loading document set...")
@@ -83,6 +83,9 @@ def predict_lr(input_file, output_path, document_set, undersample=False, oversam
 
     X = features
     y = docs.source
+
+    if predict_lean:
+        y = docs.lean
 
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=.2, random_state=42)
 
@@ -98,7 +101,10 @@ def predict_lr(input_file, output_path, document_set, undersample=False, oversam
     logging.info("Training...")
 
     if model_type == "lr":
-        clf = LogisticRegression(random_state=42, multi_class='ovr')
+        if class_balance:
+            clf = LogisticRegression(random_state=42, multi_class='ovr', class_weight='balanced')
+        else:
+            clf = LogisticRegression(random_state=42, multi_class='ovr')
     elif model_type == "mlp":
         clf = MLPClassifier(solver='lbfgs', hidden_layer_sizes=(200, 100), verbose=True, random_state=42, early_stopping=True, n_iter_no_change=10)
         
@@ -110,7 +116,11 @@ def predict_lr(input_file, output_path, document_set, undersample=False, oversam
 
     logging.info("Recording confusion matrix...")
     predictions = clf.predict(X_test)
-    figure, matrix = plot_confusion_matrix(y_test, predictions, list(docs.source))
+
+    if predict_lean:
+        figure, matrix = plot_confusion_matrix(y_test, predictions, list(docs.lean))
+    else:
+        figure, matrix = plot_confusion_matrix(y_test, predictions, list(docs.source))
     
     # make the output path if it doens't exist
     if not os.path.exists(output_path):
@@ -119,6 +129,7 @@ def predict_lr(input_file, output_path, document_set, undersample=False, oversam
     pickle.dump(clf, open(output_path + "/" + model_type + "_" + name + "_model", "wb"))
     
     with open(output_path + "/" + model_type + "_" + name + "_score", 'w') as out_file:
+        logging.info("Saving score to " + output_path + "/" + model_type + "_" + name + "_score...")
         out_file.write(str(score))
 
     figure.savefig(output_path + "/" + model_type + "_" + name + "_cm.png")
@@ -143,7 +154,7 @@ def parse():
     )
     parser.add_argument(
         "--name",
-        dest="name",
+        dest="model_name",
         type=str,
         required=False,
         default="",
@@ -171,14 +182,30 @@ def parse():
         action="store_true",
         help="Specify this flag to oversample data",
     )
+    parser.add_argument(
+        "--balanced",
+        dest="balanced",
+        action="store_true",
+        help="Specify this flag to use scikit learn's balancing argument",
+    )
+    
+    parser.add_argument(
+        "--lean",
+        dest="lean",
+        action="store_true",
+        help="Specify this flag to predict lean instead of source",
+    )
 
     cmd_args = parser.parse_args()
     return cmd_args
 
 if __name__ == "__main__":
     ARGS = parse()
+    print("=====NAME:", ARGS.model_name)
     utility.init_logging(ARGS.log_path)
     input_path, output_path = utility.fix_paths(ARGS.experiment_path, ARGS.input_path, ARGS.output_path)
     documents_path, output_path = utility.fix_paths(ARGS.experiment_path, ARGS.documents, ARGS.output_path)
 
-    predict_lr(input_path, output_path, documents_path, ARGS.undersample, ARGS.oversample, ARGS.name, ARGS.model_type)
+    print("=====NAME:", ARGS.model_name)
+
+    predict_lr(input_path, output_path, documents_path, ARGS.undersample, ARGS.oversample, name=ARGS.model_name, model_type=ARGS.model_type, class_balance=ARGS.balanced, predict_lean=ARGS.lean)

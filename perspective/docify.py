@@ -17,7 +17,7 @@ import pandas as pd
 import utility
 
 
-def docify(input_folder, output_path, count=-1, content_column="content", source_column="publication", keywords=[], overwrite=False):
+def docify(input_folder, output_path, count=-1, content_column="content", source_column="publication", keywords=[], ignore_source=[], overwrite=False):
     """Create a file of documents from all csv files in a folder
 
     A count of -1 means output _all_ documents.
@@ -42,6 +42,11 @@ def docify(input_folder, output_path, count=-1, content_column="content", source
                 article_table = article_table_in
             else:
                 article_table = pd.concat([article_table, article_table_in])
+    
+    # remove any ignored sources
+    for source in ignore_source:
+        logging.info("Ignoring source %s...", source)
+        article_table = article_table[article_table[source_column] != source]
 
     # target documents to keywords if supplied
     if len(keywords) > 0 and keywords[0] != "":
@@ -122,6 +127,17 @@ def parse():
         help="The set of words a document must contain",
     )
 
+    parser.add_argument(
+        "--ignore-source",
+        dest="ignore_source",
+        type=str,
+        required=False,
+        default="",
+        metavar="<str>",
+        help="The set of sources to ignore",
+    )
+    
+
     cmd_args = parser.parse_args()
     return cmd_args
 
@@ -131,6 +147,7 @@ if __name__ == "__main__":
     input_path, output_path = utility.fix_paths(ARGS.experiment_path, ARGS.input_path, ARGS.output_path)
 
     keywords = ARGS.keywords.split(",")
+    sources = ARGS.ignore_source.split(",")
 
 
-    docify(input_path, output_path, ARGS.count, ARGS.column, ARGS.source_column, keywords, ARGS.overwrite)
+    docify(input_path, output_path, ARGS.count, ARGS.column, ARGS.source_column, keywords, sources, ARGS.overwrite)
