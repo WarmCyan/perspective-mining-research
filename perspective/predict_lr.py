@@ -14,6 +14,7 @@ from sklearn.utils.multiclass import unique_labels
 
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression
+from sklearn.naive_bayes import MultinomialNB
 from sklearn.neural_network import MLPClassifier
 
 from imblearn.under_sampling import RandomUnderSampler
@@ -102,11 +103,15 @@ def predict_lr(input_file, output_path, document_set, undersample=False, oversam
 
     if model_type == "lr":
         if class_balance:
-            clf = LogisticRegression(random_state=42, multi_class='ovr', class_weight='balanced')
+            clf = LogisticRegression(random_state=42, multi_class='ovr', class_weight='balanced', max_iter=10000)
         else:
-            clf = LogisticRegression(random_state=42, multi_class='ovr')
+            clf = LogisticRegression(random_state=42, multi_class='ovr', max_iter=10000)
     elif model_type == "mlp":
-        clf = MLPClassifier(solver='lbfgs', hidden_layer_sizes=(200, 100), verbose=True, random_state=42, early_stopping=True, n_iter_no_change=10)
+        #clf = MLPClassifier(hidden_layer_sizes=(200, 100), verbose=True, random_state=42, early_stopping=True, n_iter_no_change=10)
+        size = len(X[0])
+        clf = MLPClassifier(hidden_layer_sizes=(size), verbose=True, random_state=42, early_stopping=True, n_iter_no_change=10)
+    elif model_type == "nb":
+        clf = MultinomialNB()
         
     clf.fit(X_train, y_train)
 
@@ -131,6 +136,29 @@ def predict_lr(input_file, output_path, document_set, undersample=False, oversam
     with open(output_path + "/" + model_type + "_" + name + "_score", 'w') as out_file:
         logging.info("Saving score to " + output_path + "/" + model_type + "_" + name + "_score...")
         out_file.write(str(score))
+
+    results_json_path = output_path + "/results.json"
+        
+    result_rows = []
+    if os.path.exists(results_json_path):
+        with open(results_json_path, 'r') as in_file:
+            result_rows = json.load(in_file)
+    
+    result_rows.append({"name":model_type + "_" + name, "score": score, "lean":predict_lean, "balanced":class_balance})
+
+    with open(results_json_path, 'w') as out_file:
+        json.dump(result_rows, out_file)
+
+    #
+    #if not os.path.exists(results_csv_path):
+        #results_df = pd.DataFrame(columns=["name", "score", "lean", "balanced"])
+    #else:
+        #results_df = pd.read_csv(results_csv_path)
+    # results_df.append({"name":model_type + "_" + name, "score": score, "lean":predict_lean, "balanced":class_balance}, ignore_index=True)
+    #results_df.loc[results_df.shape[0]] = [model_type + "_" + name, score, predict_lean, class_balance]
+    #results_df.loc[len(results_df)] = {"name":model_type + "_" + name, "score": score, "lean":predict_lean, "balanced":class_balance}
+    #results_df = results_df.append({"name":model_type + "_" + name, "score": score, "lean":predict_lean, "balanced":class_balance}, ignore_index=True)
+    #results_df.to_csv(results_csv_path)
 
     figure.savefig(output_path + "/" + model_type + "_" + name + "_cm.png")
     

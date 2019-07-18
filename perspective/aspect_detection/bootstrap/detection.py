@@ -23,9 +23,10 @@ from perspective import utility
 # NOTE: conceptually coming from "An unsupervised aspect detection model for sentiment analysis of reviews"
 
 aspect_data = {}
+named_entities = [] # keep track of these separately in case want to weight more heavily afterwards
 
 
-def detect(input_path, output_path, support=0.0, target_count=-1, thread_count=-1, overwrite=False):
+def detect(input_path, output_path, support=0.0, target_count=-1, thread_count=-1, named_entity_recog=False, overwrite=False):
     global aspect_data
     logging.info("Aspect detection requested on tokenized documents '%s'...", input_path)
     logging.info("(Support level: %f)", support)
@@ -55,6 +56,10 @@ def detect(input_path, output_path, support=0.0, target_count=-1, thread_count=-
     
     generate_candidates(pos_sentences)
     prune_stopword_candidates()
+
+    # get named entities if requested
+    if named_entity_recog:
+        find_named_entities(pos_sentences)
 
     # prune based on support
     prune_by_support(support, document_sentences, sentence_documents)
@@ -176,6 +181,37 @@ def detect_sentence_aspects(pos_sentence, pattern, sentence_index, order_matters
             else:
                 aspect_data[string_aspect]["count"] += 1
                 aspect_data[string_aspect]["sentences"].append(sentence_index)
+
+def find_named_entities(pos_sentences):
+    logging.info("Finding named entities...")
+
+    index = 0
+    for pos_sentence in tqdm(pos_sentences):
+        find_named_entities_in_sentence(pos_sentence, index)
+        index += 1
+
+def find_named_entities_in_sentence(pos_sentence, sentence_index):
+    global aspect_data
+    global named_entities
+
+    local_ne = []
+
+    parse_tree = nltk.ne_chunk(pos_sentence, binary=True)
+    for t in parse_tree.subtrees():
+        if t.label() == "NE":
+            # local_ne.append(list(t))
+            ne = list(t)
+            string_aspect = util.stringify_pos(ne)
+            if string_aspect not in named_entities:
+                named_entities.append(string_aspect)
+            
+            # add to aspect_data
+            if string_aspect not in aspect_data.keys():
+                aspect_data[string_aspect] = {"count": 1, "sentences": [sentence_index], "pos": ne}
+            else:
+                aspect_data[string_aspect]["count"] += 1
+                aspect_data[string_aspect]["sentences"].append(sentence_index)
+    
 
 # thread_count of -1 means to autodetect
 def compute_flr(pos_sentences, thread_count=-1):
@@ -315,6 +351,13 @@ def parse():
         metavar="<int>",
         help="The target number of aspects",
     )
+    
+    parser.add_argument(
+        "--ner",
+        dest="ner",
+        action="store_true",
+        help="Specify this flag to run named entity recognition during aspect extraction",
+    )
 
     cmd_args = parser.parse_args()
     return cmd_args
@@ -324,4 +367,4 @@ if __name__ == "__main__":
     utility.init_logging(ARGS.log_path)
     input_path, output_path = utility.fix_paths(ARGS.experiment_path, ARGS.input_path, ARGS.output_path)
 
-    detect(input_path, output_path, ARGS.support, ARGS.target_count, ARGS.workers, ARGS.overwrite)
+    detect(input_path, output_path, ARGS.support, ARGS.target_count, ARGS.workers, ARGS.ner, ARGS.overwrite)

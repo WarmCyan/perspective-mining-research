@@ -3,11 +3,19 @@
 source setup climatetarget_sa_updated
 docify -i $RAW/kaggle1 -o documents.json -c 5000 --keywords "climate change,global warming,climate" --ignore-source "CNN,Buzzfeed News"
 tokenization -i documents.json -o tokens
-bootstrap-detection -i tokens -o aspects --support 0.05 -w 4 
-tfidfify -i documents.json -o tfidf.json 
-swn-sentiment-analysis -i aspects -o as_vectors -t tokens --sd 1
 
-report --documents documents.json --aspects aspects/aspects.json -i ./ -o ./
+#bootstrap-detection -i tokens -o aspects --support 0.05 -w 4 
+bootstrap-detection -i tokens -o aspects_ner --support 0.05 -w 4 --ner
+
+tfidfify -i documents.json -o tfidf.json 
+
+#swn-sentiment-analysis -i aspects -o as_vectors -t tokens --sd 1
+swn-sentiment-analysis -i aspects_ner -o as_vectors_ner -t tokens --sd 1
+
+combine -i tfidf.json --input-2 as_vectors/doc_as_vectors.json -o tfidf_as_combined.json
+
+#report --documents documents.json --aspects aspects/aspects.json -i ./ -o ./
+report --documents documents.json --aspects aspects/aspects_ner.json -i ./ -o ./
 
 predict_lr -i as_vectors/doc_as_vectors.json --documents documents.json -o results --name "as_vec"
 examine_predictions -i as_vectors/doc_as_vectors.json --documents documents.json --model results/lr_as_vec_model -o ./as_vec_examine.csv
@@ -16,12 +24,32 @@ predict_lr -i as_vectors/doc_as_vectors.json --documents documents.json -o resul
 predict_lr -i tfidf.json --documents documents.json -o results --name "tfidf"
 predict_lr -i tfidf.json --documents documents.json -o results --name "tfidf_balanced" --balanced
 
-add_lean -i documents.json -o documents_lean.json --bias-file $RAW/bias_data.json
+#add_lean -i documents.json -o documents_lean.json --bias-file $RAW/bias_data.json
+#
+#predict_lr -i as_vectors/doc_as_vectors.json --documents documents_lean.json -o results --name "as_vec_lean" --lean
+#predict_lr -i as_vectors/doc_as_vectors.json --documents documents_lean.json -o results --name "as_vec_lean_balanced" --balanced --lean
+#predict_lr -i tfidf.json --documents documents_lean.json -o results --name "tfidf_lean" --lean
+#predict_lr -i tfidf.json --documents documents_lean.json -o results --name "tfidf_lean_balanced" --balanced --lean
+#
+#
+#predict_lr -i tfidf_as_combined.json --documents documents.json -o results --name "combined"
+#predict_lr -i tfidf_as_combined.json --documents documents.json -o results --name "combined_balanced" --balanced
+#predict_lr -i tfidf_as_combined.json --documents documents_lean.json -o results --name "combined_lean" --lean
+#predict_lr -i tfidf_as_combined.json --documents documents_lean.json -o results --name "combined_lean_balanced" --lean --balanced
 
-predict_lr -i as_vectors/doc_as_vectors.json --documents documents_lean.json -o results --name "as_vec_lean" --lean
-predict_lr -i as_vectors/doc_as_vectors.json --documents documents_lean.json -o results --name "as_vec_lean_balanced" --balanced --lean
-predict_lr -i tfidf.json --documents documents_lean.json -o results --name "tfidf_lean" --lean
-predict_lr -i tfidf.json --documents documents_lean.json -o results --name "tfidf_lean_balanced" --balanced --lean
+
+
+
+
+
+#predict_lr -i as_vectors/doc_as_vectors.json --documents documents.json -o results --name "as_vec_mlp" --type "mlp"
+#predict_lr -i tfidf.json --documents documents.json -o results --name "tfidf_mlp" --type "mlp"
+#predict_lr -i tfidf_as_combined.json --documents documents.json -o results --name "combined_mlp" --type "mlp"
+#
+#predict_lr -i as_vectors/doc_as_vectors.json --documents documents.json -o results --name "as_vec" --type "nb"
+#predict_lr -i tfidf.json --documents documents.json -o results --name "tfidf" --type "nb"
+#predict_lr -i tfidf_as_combined.json --documents documents.json -o results --name "combined" --type "nb"
+
 
 #predict_lr -i tfidf.json --documents documents.json -o results --name "tfidf"
 #predict_lr -i as_vectors/doc_as_vectors.json --documents documents.json -o results --name "as_vec"
