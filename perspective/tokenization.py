@@ -57,7 +57,8 @@ def tokenize(input_file, output_path, count=-1, overwrite=False):
     for sentence in tqdm(sentences):
         # pos tagger
         words = nltk.word_tokenize(sentence)
-        words = [word.lower() for word in words if word.isalpha() and word is not "s"]
+        #words = [word.lower() for word in words if word.isalpha() and word is not "s"]
+        words = [word for word in words if word.isalpha() and word is not "s"]
         tagged = nltk.pos_tag(words)
         pos_sentences.append(tagged)
 

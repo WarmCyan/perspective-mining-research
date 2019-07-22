@@ -54,8 +54,9 @@ def detect(input_path, output_path, support=0.0, target_count=-1, thread_count=-
     with open(sent_doc_path, 'r') as file_in:
         sentence_documents = json.load(file_in)
     
-    generate_candidates(pos_sentences)
-    prune_stopword_candidates()
+    if not named_entity_recog:
+        generate_candidates(pos_sentences)
+        prune_stopword_candidates()
 
     # get named entities if requested
     if named_entity_recog:
@@ -189,6 +190,8 @@ def find_named_entities(pos_sentences):
     for pos_sentence in tqdm(pos_sentences):
         find_named_entities_in_sentence(pos_sentence, index)
         index += 1
+
+    logging.info("%i named entities found", len(named_entities))
 
 def find_named_entities_in_sentence(pos_sentence, sentence_index):
     global aspect_data

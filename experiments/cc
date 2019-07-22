@@ -5,24 +5,34 @@ docify -i $RAW/kaggle1 -o documents.json -c 5000 --keywords "climate change,glob
 tokenization -i documents.json -o tokens
 
 #bootstrap-detection -i tokens -o aspects --support 0.05 -w 4 
-bootstrap-detection -i tokens -o aspects_ner --support 0.05 -w 4 --ner
+bootstrap-detection -i tokens -o aspects_ner --support 0.01 -w 4 --ner
 
 tfidfify -i documents.json -o tfidf.json 
 
 #swn-sentiment-analysis -i aspects -o as_vectors -t tokens --sd 1
 swn-sentiment-analysis -i aspects_ner -o as_vectors_ner -t tokens --sd 1
 
-combine -i tfidf.json --input-2 as_vectors/doc_as_vectors.json -o tfidf_as_combined.json
+#combine -i tfidf.json --input-2 as_vectors/doc_as_vectors.json -o tfidf_as_combined.json
+combine -i tfidf.json --input-2 as_vectors_ner/doc_as_vectors.json -o tfidf_as_combined_ner.json
 
 #report --documents documents.json --aspects aspects/aspects.json -i ./ -o ./
-report --documents documents.json --aspects aspects/aspects_ner.json -i ./ -o ./
+report --documents documents.json --aspects aspects_ner/aspects.json -i ./ -o ./
 
-predict_lr -i as_vectors/doc_as_vectors.json --documents documents.json -o results --name "as_vec"
-examine_predictions -i as_vectors/doc_as_vectors.json --documents documents.json --model results/lr_as_vec_model -o ./as_vec_examine.csv
+predict_lr -i as_vectors_ner/doc_as_vectors.json --documents documents.json -o results --name "as_vec_ner"
 
-predict_lr -i as_vectors/doc_as_vectors.json --documents documents.json -o results --name "as_vec_balanced" --balanced
-predict_lr -i tfidf.json --documents documents.json -o results --name "tfidf"
-predict_lr -i tfidf.json --documents documents.json -o results --name "tfidf_balanced" --balanced
+predict_lr -i as_vectors_ner/doc_as_vectors.json --documents documents.json -o results --name "as_vec_balanced_ner" --balanced
+predict_lr -i tfidf.json --documents documents.json -o results --name "tfidf_ner"
+predict_lr -i tfidf.json --documents documents.json -o results --name "tfidf_balanced_ner" --balanced
+
+
+
+
+#predict_lr -i as_vectors/doc_as_vectors.json --documents documents.json -o results --name "as_vec"
+#examine_predictions -i as_vectors/doc_as_vectors.json --documents documents.json --model results/lr_as_vec_model -o ./as_vec_examine.csv
+#
+#predict_lr -i as_vectors/doc_as_vectors.json --documents documents.json -o results --name "as_vec_balanced" --balanced
+#predict_lr -i tfidf.json --documents documents.json -o results --name "tfidf"
+#predict_lr -i tfidf.json --documents documents.json -o results --name "tfidf_balanced" --balanced
 
 #add_lean -i documents.json -o documents_lean.json --bias-file $RAW/bias_data.json
 #
