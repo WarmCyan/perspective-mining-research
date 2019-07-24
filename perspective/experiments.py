@@ -21,10 +21,14 @@ def run(experiment_path, raw_path, cache_path, overwite=False):
     vectorize_hashes = {}
     predict_hashes = {}
 
+    results_list = []
+
     index = 0
     for experiment in experiment_list:
         index += 1
         logging.info("Starting experiment %i - %s", index, json.dumps(experiment))
+
+        # NOTE: each step should return a set of parameters to record
 
         # preprocessing
         preprocess_params = experiment[0]
@@ -50,7 +54,13 @@ def run(experiment_path, raw_path, cache_path, overwite=False):
         if predict_hash in predict_params.keys():
             predict_hashes[predict_hash] = predict_params
         logging.info("Running prediction for experiment %i - %s - %s", index, vectorize_hash, json.dumps(predict_params))
-        predict(**predict_params)
+        result = predict(**predict_params)
+
+        results_list.append(result)
+
+        results_df = pd.DataFrame(results_list)
+        results_df.to_csv(experiment_path + "/results.csv")
+
 
 def hash_params(params):
     if "name" in params.keys():
