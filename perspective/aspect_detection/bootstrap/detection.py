@@ -11,14 +11,15 @@ from tqdm import tqdm, trange
 from collections import OrderedDict
 from itertools import islice
 
-import flr
-import util
-import ascore
+import aspect_detection.bootstrap.flr as flr
+import aspect_detection.bootstrap.util as util
+import aspect_detection.bootstrap.ascore as ascore
 import multiprocessing as mp
 
 import os, sys
-sys.path.insert(0, os.path.abspath("../../../"))
-from perspective import utility
+#sys.path.insert(0, os.path.abspath("../../../"))
+#from perspective import utility
+import utility
 
 # NOTE: conceptually coming from "An unsupervised aspect detection model for sentiment analysis of reviews"
 

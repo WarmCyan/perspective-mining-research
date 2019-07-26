@@ -15,19 +15,26 @@ import utility
 
 import docify
 import tokenization
-import aspect_detection
+import aspect_detection.bootstrap
+import aspect_detection.bootstrap.detection
 import sentiment_analysis
 import tfidfify
 import combine
+import prediction_model
 
 
 THREAD_COUNT = 4
 
-
 # in this context overwrite means re-run existing experiments
 def run(experiment_path, raw_path, cache_path, overwrite=False):
 
-    experiment_list = [] # populate this from some other folder
+    experiment_list = [
+        {
+            "preprocess":dict(data_folder=(raw_path+"/kaggle1"), document_count=5000, keywords=["climate change","global warming","climate"], ignore_sources=["CNN","Buzzfeed News"]),
+            "vectorize":dict(support=0.01, ner=True, minimum_flr=10.0, sentiment_distance_dist_sd=1),
+            "predict":dict(source="as_vec", undersample=False, oversample=False, model_type="lr", class_balance=False)
+        },
+    ]
 
     preprocess_hashes = {}
     vectorize_hashes = {}
@@ -38,6 +45,7 @@ def run(experiment_path, raw_path, cache_path, overwrite=False):
     results_path = experiment_path + "/results.csv"
 
     # search for previous results file, and load them in
+    old_results_df = None
     if os.path.exists(results_path):
         old_results_df = pd.read_csv(results_path)
         results_list = old_results_df.to_dict(orient='records')
@@ -65,7 +73,7 @@ def run(experiment_path, raw_path, cache_path, overwrite=False):
 
         # check if experiment already run
         exists = False
-        if old_results_df[(old_results_df.preprocess == preprocess_hash) & (old_results_df.vectorize == vectorize_hash) & (old_results_df.predict == predict_hash)].shape[0] > 0:
+        if old_results_df is not None and old_results_df[(old_results_df.preprocess == preprocess_hash) & (old_results_df.vectorize == vectorize_hash) & (old_results_df.predict == predict_hash)].shape[0] > 0:
             exists = True
         
         if exists:
@@ -125,7 +133,7 @@ def run(experiment_path, raw_path, cache_path, overwrite=False):
             predict_hashes[predict_hash] = predict_params
 
         # run the prediction!
-        result = predict(**predict_params)
+        result = predict(preprocess_folder, vectorize_folder, predict_folder, **predict_params)
 
         # gather result information
         result.update(preprocess_params)
@@ -144,7 +152,7 @@ def run(experiment_path, raw_path, cache_path, overwrite=False):
 def hash_params(params):
     if "name" in params.keys():
         return params["name"]
-    return hashlib.md5(json.dumps(params, sort_keys=True))
+    return str(hashlib.md5(json.dumps(params, sort_keys=True).encode('utf-8')).hexdigest())
     
 
 
@@ -186,8 +194,28 @@ def vectorize(preprocess_folder, vectorize_folder, **kwargs):
     combine.combine(input_file_1=tfidf_path, input_file_2=(as_vec_path + "/doc_as_vectors.json"), output_file=(vectorize_folder + "/tfidf_as_vec_combined.json"))
     
 
-def predict():
-    pass
+# source
+# undersample (False)
+# oversample (False)
+# model_type ("lr")
+# class_balance (False)
+def predict(preprocess_folder, vectorize_folder, predict_folder, **kwargs):
+    documents_file = preprocess_folder + "/documents.json"
+
+    source = kwargs.get("source")
+    input_file = ""
+    if source == "tfidf":
+        input_file = vectorize_folder + "/tfidf.json"
+    elif source == "as_vec":
+        input_file = vectorize_folder + "/as_vec/doc_as_vectors.json"
+    elif source == "combined":
+        input_file = vectorize_folder + "/tfidf_as_vec_combined.json"
+    
+    score = prediction_model.predict(input_file=input_file, output_path=predict_folder, document_set=documents_file, model_type=kwargs.get("model_type", "lr"), undersample=kwargs.get("undersample", False), oversample=kwargs.get("oversample", False), class_balance=kwargs.get("class_balance", True))
+
+
+    return score
+    
 
 
 def parse():

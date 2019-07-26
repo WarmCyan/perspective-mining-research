@@ -1,0 +1,5 @@
+#!/bin/bash
+
+source setup experiments
+
+experiments -i $RAW -o $CACHE

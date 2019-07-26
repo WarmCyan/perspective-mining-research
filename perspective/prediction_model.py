@@ -70,8 +70,8 @@ def plot_confusion_matrix(y_true, y_pred, classes,
     fig.tight_layout()
     return fig, cm
 
-def predict_lr(input_file, output_path, document_set, undersample=False, oversample=False, name='', model_type="lr", class_balance=False, predict_lean=False, **kwargs):
-    logging.info("Logistic regression model requested on %s...", input_file)
+def predict(input_file, output_path, document_set, undersample=False, oversample=False, name='', model_type="lr", class_balance=False, predict_lean=False, **kwargs):
+    logging.info("Prediction model requested on %s...", input_file)
 
     logging.info("Loading document set...")
     #with open(document_set, 'r') as infile:
@@ -137,17 +137,21 @@ def predict_lr(input_file, output_path, document_set, undersample=False, oversam
         logging.info("Saving score to " + output_path + "/" + model_type + "_" + name + "_score...")
         out_file.write(str(score))
 
-    results_json_path = output_path + "/results.json"
-        
-    result_rows = []
-    if os.path.exists(results_json_path):
-        with open(results_json_path, 'r') as in_file:
-            result_rows = json.load(in_file)
-    
-    result_rows.append({"name":model_type + "_" + name, "score": score, "lean":predict_lean, "balanced":class_balance})
+    return score
 
-    with open(results_json_path, 'w') as out_file:
-        json.dump(result_rows, out_file)
+    #results_json_path = output_path + "/results.json"
+        
+    #result_rows = []
+    #if os.path.exists(results_json_path):
+        #with open(results_json_path, 'r') as in_file:
+            #result_rows = json.load(in_file)
+    
+    #result_rows.append({"name":model_type + "_" + name, "score": score, "lean":predict_lean, "balanced":class_balance})
+
+    #with open(results_json_path, 'w') as out_file:
+        #json.dump(result_rows, out_file)
+
+    
 
     #
     #if not os.path.exists(results_csv_path):
@@ -236,4 +240,4 @@ if __name__ == "__main__":
 
     print("=====NAME:", ARGS.model_name)
 
-    predict_lr(input_path, output_path, documents_path, ARGS.undersample, ARGS.oversample, name=ARGS.model_name, model_type=ARGS.model_type, class_balance=ARGS.balanced, predict_lean=ARGS.lean)
+    predict(input_path, output_path, documents_path, ARGS.undersample, ARGS.oversample, name=ARGS.model_name, model_type=ARGS.model_type, class_balance=ARGS.balanced, predict_lean=ARGS.lean)
