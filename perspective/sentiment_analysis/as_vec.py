@@ -12,8 +12,8 @@ from tqdm import tqdm
 
 import os, sys
 sys.path.insert(0, os.path.abspath("../../"))
-from perspective import utility
 #from perspective import utility
+import utility
 
 
 def evaluate_adjective(adjective):

@@ -2,7 +2,7 @@
 
 import math
 
-import aspect_detection.bootstrap.util
+import aspect_detection.bootstrap.util as util
 
 lr_counts = {}
 

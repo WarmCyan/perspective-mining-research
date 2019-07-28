@@ -2,4 +2,4 @@
 
 source setup experiments
 
-experiments -i $RAW -o $CACHE
+experiments -i $RAW -o $CACHE "$@"

@@ -18,16 +18,16 @@ import tokenization
 import aspect_detection.bootstrap
 import aspect_detection.bootstrap.detection
 import sentiment_analysis
+import sentiment_analysis.as_vec
 import tfidfify
 import combine
 import prediction_model
 
 
-THREAD_COUNT = 4
+THREAD_COUNT = 2
 
 # in this context overwrite means re-run existing experiments
 def run(experiment_path, raw_path, cache_path, overwrite=False):
-
     experiment_list = [
         {
             "preprocess":dict(data_folder=(raw_path+"/kaggle1"), document_count=5000, keywords=["climate change","global warming","climate"], ignore_sources=["CNN","Buzzfeed News"]),
@@ -86,6 +86,13 @@ def run(experiment_path, raw_path, cache_path, overwrite=False):
                 shutil.rmtree(preprocess_folder, ignore_errors=True)
                 shutil.rmtree(vectorize_folder, ignore_errors=True)
                 shutil.rmtree(predict_folder, ignore_errors=True)
+        else:
+            if overwrite:
+                logging.info("Deleting previous experiment components...")
+                shutil.rmtree(preprocess_folder, ignore_errors=True)
+                shutil.rmtree(vectorize_folder, ignore_errors=True)
+                shutil.rmtree(predict_folder, ignore_errors=True)
+                
 
         # ---------------------
         # PREPROCESSING
@@ -182,6 +189,7 @@ def vectorize(preprocess_folder, vectorize_folder, **kwargs):
     tfidf_path = vectorize_folder + "/tfidf.json"
 
     aspect_data_path = vectorize_folder + "/aspects"
+    os.makedirs(aspect_data_path)
 
     as_vec_path = vectorize_folder + "/as_vec"
     

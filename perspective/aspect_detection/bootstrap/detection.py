@@ -71,7 +71,7 @@ def detect(input_path, output_path, support=0.0, target_count=-1, thread_count=-
     logging.info("Saving aspect data...")
     with open(output_path + "/aspects.json" , 'w') as file_out:
         json.dump(aspect_data, file_out)
-    exit()
+    return
 
     compute_a_score(pos_sentences)
 
@@ -85,7 +85,7 @@ def detect(input_path, output_path, support=0.0, target_count=-1, thread_count=-
         #print(yep["pos"], yep["ascore"])
 
     logging.info("Saving aspect data...")
-    with open(output_path + "/aspects.json" , 'w') as file_out:
+    with open(output_path + "/aspects.json", 'w') as file_out:
         json.dump(sorted_aspects, file_out)
 
 
@@ -255,9 +255,6 @@ def collect_flr(result):
     global aspect_data
 
     # https://www.machinelearningplus.com/python/parallel-processing-python/
-    #print("Result:")
-    #print(result)
-    
     for key in result.keys():
         aspect_data[key]["flr"] = result[key]
 
