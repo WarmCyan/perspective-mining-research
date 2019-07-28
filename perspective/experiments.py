@@ -140,7 +140,7 @@ def run(experiment_path, raw_path, cache_path, overwrite=False):
             predict_hashes[predict_hash] = predict_params
 
         # run the prediction!
-        result = predict(preprocess_folder, vectorize_folder, predict_folder, **predict_params)
+        result = {"score": predict(preprocess_folder, vectorize_folder, predict_folder, **predict_params)}
 
         # gather result information
         result.update(preprocess_params)
@@ -189,7 +189,9 @@ def vectorize(preprocess_folder, vectorize_folder, **kwargs):
     tfidf_path = vectorize_folder + "/tfidf.json"
 
     aspect_data_path = vectorize_folder + "/aspects"
-    os.makedirs(aspect_data_path)
+    
+    if not os.path.isdir(aspect_data_path):
+        os.makedirs(aspect_data_path)
 
     as_vec_path = vectorize_folder + "/as_vec"
     
