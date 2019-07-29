@@ -28,11 +28,41 @@ THREAD_COUNT = 2
 
 # in this context overwrite means re-run existing experiments
 def run(experiment_path, raw_path, cache_path, overwrite=False):
+
+
+    preprocess_climate = dict(data_folder=(raw_path+"/kaggle1"), document_count=5000, keywords=["climate change","global warming","climate"], ignore_sources=["CNN","Buzzfeed News"])
+
+    
     experiment_list = [
         {
-            "preprocess":dict(data_folder=(raw_path+"/kaggle1"), document_count=5000, keywords=["climate change","global warming","climate"], ignore_sources=["CNN","Buzzfeed News"]),
+            "preprocess":preprocess_climate,
             "vectorize":dict(support=0.01, ner=True, minimum_flr=10.0, sentiment_distance_dist_sd=1),
             "predict":dict(source="as_vec", undersample=False, oversample=False, model_type="lr", class_balance=False)
+        },
+        {
+            "preprocess":preprocess_climate,
+            "vectorize":dict(support=0.01, ner=True, minimum_flr=10.0, sentiment_distance_dist_sd=1),
+            "predict":dict(source="tfidf", undersample=False, oversample=False, model_type="lr", class_balance=False)
+        },
+        {
+            "preprocess":preprocess_climate,
+            "vectorize":dict(support=0.01, ner=True, minimum_flr=10.0, sentiment_distance_dist_sd=1),
+            "predict":dict(source="combined", undersample=False, oversample=False, model_type="lr", class_balance=False)
+        },
+        {
+            "preprocess":preprocess_climate,
+            "vectorize":dict(support=0.01, ner=False, minimum_flr=10.0, sentiment_distance_dist_sd=1),
+            "predict":dict(source="as_vec", undersample=False, oversample=False, model_type="lr", class_balance=False)
+        },
+        {
+            "preprocess":preprocess_climate,
+            "vectorize":dict(support=0.01, ner=False, minimum_flr=10.0, sentiment_distance_dist_sd=1),
+            "predict":dict(source="tfidf", undersample=False, oversample=False, model_type="lr", class_balance=False)
+        },
+        {
+            "preprocess":preprocess_climate,
+            "vectorize":dict(support=0.01, ner=False, minimum_flr=10.0, sentiment_distance_dist_sd=1),
+            "predict":dict(source="combined", undersample=False, oversample=False, model_type="lr", class_balance=False)
         },
     ]
 
@@ -79,13 +109,13 @@ def run(experiment_path, raw_path, cache_path, overwrite=False):
         if exists:
             logging.info("Previous result from experiment found...")
             if overwrite or ("rerun" in experiment.keys() and experiment["rerun"]):
-                logging.info("Skipping")
-                continue
-            else:
                 logging.info("Deleting previous experiment components...")
                 shutil.rmtree(preprocess_folder, ignore_errors=True)
                 shutil.rmtree(vectorize_folder, ignore_errors=True)
                 shutil.rmtree(predict_folder, ignore_errors=True)
+            else:
+                logging.info("Skipping")
+                continue
         else:
             if overwrite:
                 logging.info("Deleting previous experiment components...")
