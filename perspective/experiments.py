@@ -34,35 +34,62 @@ def run(experiment_path, raw_path, cache_path, overwrite=False):
 
     
     experiment_list = [
+        # non-named entity recognition
         {
             "preprocess":preprocess_climate,
-            "vectorize":dict(support=0.01, ner=True, minimum_flr=10.0, sentiment_distance_dist_sd=1),
+            "vectorize":dict(support=0.01, ner=False, minimum_flr=10.0, sentiment_distance_dist_sd=1, tfidf_match_vocab=False),
             "predict":dict(source="as_vec", undersample=False, oversample=False, model_type="lr", class_balance=False)
         },
         {
             "preprocess":preprocess_climate,
-            "vectorize":dict(support=0.01, ner=True, minimum_flr=10.0, sentiment_distance_dist_sd=1),
+            "vectorize":dict(support=0.01, ner=False, minimum_flr=10.0, sentiment_distance_dist_sd=1, tfidf_match_vocab=False),
             "predict":dict(source="tfidf", undersample=False, oversample=False, model_type="lr", class_balance=False)
         },
         {
             "preprocess":preprocess_climate,
-            "vectorize":dict(support=0.01, ner=True, minimum_flr=10.0, sentiment_distance_dist_sd=1),
+            "vectorize":dict(support=0.01, ner=False, minimum_flr=10.0, sentiment_distance_dist_sd=1, tfidf_match_vocab=False),
             "predict":dict(source="combined", undersample=False, oversample=False, model_type="lr", class_balance=False)
         },
+
+        # named entity recognition
         {
             "preprocess":preprocess_climate,
-            "vectorize":dict(support=0.01, ner=False, minimum_flr=10.0, sentiment_distance_dist_sd=1),
+            "vectorize":dict(support=0.01, ner=True, minimum_flr=10.0, sentiment_distance_dist_sd=1, tfidf_match_vocab=False),
             "predict":dict(source="as_vec", undersample=False, oversample=False, model_type="lr", class_balance=False)
         },
         {
             "preprocess":preprocess_climate,
-            "vectorize":dict(support=0.01, ner=False, minimum_flr=10.0, sentiment_distance_dist_sd=1),
+            "vectorize":dict(support=0.01, ner=True, minimum_flr=10.0, sentiment_distance_dist_sd=1, tfidf_match_vocab=False),
             "predict":dict(source="tfidf", undersample=False, oversample=False, model_type="lr", class_balance=False)
         },
         {
             "preprocess":preprocess_climate,
-            "vectorize":dict(support=0.01, ner=False, minimum_flr=10.0, sentiment_distance_dist_sd=1),
+            "vectorize":dict(support=0.01, ner=True, minimum_flr=10.0, sentiment_distance_dist_sd=1, tfidf_match_vocab=False),
             "predict":dict(source="combined", undersample=False, oversample=False, model_type="lr", class_balance=False)
+        },
+        
+        # lower support
+        {
+            "preprocess":preprocess_climate,
+            "vectorize":dict(support=0.0001, ner=True, minimum_flr=10.0, sentiment_distance_dist_sd=1, tfidf_match_vocab=False),
+            "predict":dict(source="as_vec", undersample=False, oversample=False, model_type="lr", class_balance=False)
+        },
+        {
+            "preprocess":preprocess_climate,
+            "vectorize":dict(support=0.0001, ner=True, minimum_flr=10.0, sentiment_distance_dist_sd=1, tfidf_match_vocab=False),
+            "predict":dict(source="combined", undersample=False, oversample=False, model_type="lr", class_balance=False)
+        },
+        
+        # matched tfidf
+        {
+            "preprocess":preprocess_climate,
+            "vectorize":dict(support=0.01, ner=True, minimum_flr=10.0, sentiment_distance_dist_sd=1, tfidf_match_vocab=True),
+            "predict":dict(source="tfidf", undersample=False, oversample=False, model_type="lr", class_balance=False)
+        },
+        {
+            "preprocess":preprocess_climate,
+            "vectorize":dict(support=0.01, ner=True, minimum_flr=10.0, sentiment_distance_dist_sd=1, tfidf_match_vocab=False, tfidf_feature_count=422),
+            "predict":dict(source="tfidf", undersample=False, oversample=False, model_type="lr", class_balance=False)
         },
     ]
 
@@ -212,6 +239,8 @@ def preprocess(preprocess_folder, **kwargs):
 # ner (False)
 # minimum_flr (10.0)
 # sentiment_distance_dist_sd (1)
+# tfidf_feature_count (5000)
+# tfidf_match_vocab (False)
 def vectorize(preprocess_folder, vectorize_folder, **kwargs):
     documents_file = preprocess_folder + "/documents.json"
     tokens_folder = preprocess_folder + "/tokens"
@@ -219,6 +248,11 @@ def vectorize(preprocess_folder, vectorize_folder, **kwargs):
     tfidf_path = vectorize_folder + "/tfidf.json"
 
     aspect_data_path = vectorize_folder + "/aspects"
+
+    match_vocab = None
+    match_vocab_arg = kwargs.get("tfidf_match_vocab", False)
+    if match_vocab_arg:
+        match_vocab = aspect_data_path + "/aspects.json"
     
     if not os.path.isdir(aspect_data_path):
         os.makedirs(aspect_data_path)
@@ -227,7 +261,7 @@ def vectorize(preprocess_folder, vectorize_folder, **kwargs):
     
     aspect_detection.bootstrap.detection.detect(input_path=tokens_folder, output_path=aspect_data_path, support=kwargs.get("support"), target_count=kwargs.get("target_aspect_count", -1), thread_count=THREAD_COUNT, named_entity_recog=kwargs.get("ner", False))
 
-    tfidfify.tfidf(input_path=documents_file, output_path=tfidf_path)
+    tfidfify.tfidf(input_path=documents_file, output_path=tfidf_path, feature_count=kwargs.get("tfidf_feature_count", 5000), match_vocab=match_vocab)
 
     sentiment_analysis.as_vec.create_as_vectors(input_path=aspect_data_path, tokens_path=tokens_folder, output_path=as_vec_path, minimum_flr=kwargs.get("minimum_flr", 10.0), sd=kwargs.get("sentiment_distance_dist_sd", 1))
 

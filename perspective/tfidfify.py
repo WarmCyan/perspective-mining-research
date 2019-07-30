@@ -11,7 +11,8 @@ import utility
 
 
 # NOTE: expects the documents, not the tokenized
-def tfidf(input_path, output_path, overwrite=False):
+# if you want to use same vocab as aspects, pass the path to match_vocab (expects dictionary where keys are vocab)
+def tfidf(input_path, output_path, feature_count=5000, match_vocab=None, overwrite=False):
 
     logging.info("TF-IDF requested on document set '%s'...", input_path)
 
@@ -27,8 +28,14 @@ def tfidf(input_path, output_path, overwrite=False):
     for document in tqdm(docs):
         corpus.append(document["text"])
 
+    vocab = None
+    if match_vocab:
+        with open(match_vocab, 'r') as in_file:
+            vocab_data = json.load(in_file)
+            vocab = vocab_data.keys()
+
     logging.info("Running TF-IDF...")
-    vectorizer = TfidfVectorizer(max_features=5000)
+    vectorizer = TfidfVectorizer(max_features=feature_count, vocabulary=match_vocab)
     vectorizer.fit(corpus)
     tfidf_matrix = vectorizer.transform(corpus)
     #tfidf_matrix = vectorizer.fit_transform(corpus)
