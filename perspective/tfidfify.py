@@ -32,10 +32,11 @@ def tfidf(input_path, output_path, feature_count=5000, match_vocab=None, overwri
     if match_vocab:
         with open(match_vocab, 'r') as in_file:
             vocab_data = json.load(in_file)
-            vocab = vocab_data.keys()
+            vocab = list(set([word.lower() for word in vocab_data.keys()]))
+            print(vocab)
 
     logging.info("Running TF-IDF...")
-    vectorizer = TfidfVectorizer(max_features=feature_count, vocabulary=match_vocab)
+    vectorizer = TfidfVectorizer(max_features=feature_count, vocabulary=vocab)
     vectorizer.fit(corpus)
     tfidf_matrix = vectorizer.transform(corpus)
     #tfidf_matrix = vectorizer.fit_transform(corpus)

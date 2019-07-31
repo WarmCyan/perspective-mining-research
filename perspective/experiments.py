@@ -31,65 +31,130 @@ def run(experiment_path, raw_path, cache_path, overwrite=False):
 
 
     preprocess_climate = dict(data_folder=(raw_path+"/kaggle1"), document_count=5000, keywords=["climate change","global warming","climate"], ignore_sources=["CNN","Buzzfeed News"])
+    vectorize_normal = dict(support=0.01, ner=False, ner_and_regular=False, minimum_flr=10.0, sentiment_distance_dist_sd=1, tfidf_match_vocab=False)
+    vectorize_normal_ner = dict(support=0.01, ner=True, ner_and_regular=False, minimum_flr=10.0, sentiment_distance_dist_sd=1, tfidf_match_vocab=False)
+    vectorize_normal_ner_and = dict(support=0.01, ner=True, ner_and_regular=True, minimum_flr=10.0, sentiment_distance_dist_sd=1, tfidf_match_vocab=False)
 
     
     experiment_list = [
         # non-named entity recognition
         {
             "preprocess":preprocess_climate,
-            "vectorize":dict(support=0.01, ner=False, minimum_flr=10.0, sentiment_distance_dist_sd=1, tfidf_match_vocab=False),
+            "vectorize":vectorize_normal,
             "predict":dict(source="as_vec", undersample=False, oversample=False, model_type="lr", class_balance=False)
         },
         {
             "preprocess":preprocess_climate,
-            "vectorize":dict(support=0.01, ner=False, minimum_flr=10.0, sentiment_distance_dist_sd=1, tfidf_match_vocab=False),
+            "vectorize":vectorize_normal,
+            "predict":dict(source="as_vec", undersample=False, oversample=False, model_type="nb", class_balance=False)
+        },
+        {
+            "preprocess":preprocess_climate,
+            "vectorize":vectorize_normal,
             "predict":dict(source="tfidf", undersample=False, oversample=False, model_type="lr", class_balance=False)
         },
         {
             "preprocess":preprocess_climate,
-            "vectorize":dict(support=0.01, ner=False, minimum_flr=10.0, sentiment_distance_dist_sd=1, tfidf_match_vocab=False),
+            "vectorize":vectorize_normal,
+            "predict":dict(source="tfidf", undersample=False, oversample=False, model_type="nb", class_balance=False)
+        },
+        {
+            "preprocess":preprocess_climate,
+            "vectorize":vectorize_normal,
             "predict":dict(source="combined", undersample=False, oversample=False, model_type="lr", class_balance=False)
+        },
+        {
+            "preprocess":preprocess_climate,
+            "vectorize":vectorize_normal,
+            "predict":dict(source="combined", undersample=False, oversample=False, model_type="nb", class_balance=False)
         },
 
         # named entity recognition
         {
             "preprocess":preprocess_climate,
-            "vectorize":dict(support=0.01, ner=True, minimum_flr=10.0, sentiment_distance_dist_sd=1, tfidf_match_vocab=False),
+            "vectorize":vectorize_normal_ner,
             "predict":dict(source="as_vec", undersample=False, oversample=False, model_type="lr", class_balance=False)
         },
         {
             "preprocess":preprocess_climate,
-            "vectorize":dict(support=0.01, ner=True, minimum_flr=10.0, sentiment_distance_dist_sd=1, tfidf_match_vocab=False),
-            "predict":dict(source="tfidf", undersample=False, oversample=False, model_type="lr", class_balance=False)
+            "vectorize":vectorize_normal_ner,
+            "predict":dict(source="as_vec", undersample=False, oversample=False, model_type="nb", class_balance=False)
         },
         {
             "preprocess":preprocess_climate,
-            "vectorize":dict(support=0.01, ner=True, minimum_flr=10.0, sentiment_distance_dist_sd=1, tfidf_match_vocab=False),
+            "vectorize":vectorize_normal_ner,
             "predict":dict(source="combined", undersample=False, oversample=False, model_type="lr", class_balance=False)
+        },
+        {
+            "preprocess":preprocess_climate,
+            "vectorize":vectorize_normal_ner,
+            "predict":dict(source="combined", undersample=False, oversample=False, model_type="nb", class_balance=False)
         },
         
         # lower support
         {
             "preprocess":preprocess_climate,
-            "vectorize":dict(support=0.0001, ner=True, minimum_flr=10.0, sentiment_distance_dist_sd=1, tfidf_match_vocab=False),
+            "vectorize":dict(support=0.005, ner=True, ner_and_regular=False,  minimum_flr=10.0, sentiment_distance_dist_sd=1, tfidf_match_vocab=False),
             "predict":dict(source="as_vec", undersample=False, oversample=False, model_type="lr", class_balance=False)
         },
         {
             "preprocess":preprocess_climate,
-            "vectorize":dict(support=0.0001, ner=True, minimum_flr=10.0, sentiment_distance_dist_sd=1, tfidf_match_vocab=False),
+            "vectorize":dict(support=0.005, ner=True, ner_and_regular=False,  minimum_flr=10.0, sentiment_distance_dist_sd=1, tfidf_match_vocab=False),
+            "predict":dict(source="as_vec", undersample=False, oversample=False, model_type="nb", class_balance=False)
+        },
+        {
+            "preprocess":preprocess_climate,
+            "vectorize":dict(support=0.005, ner=True, ner_and_regular=False, minimum_flr=10.0, sentiment_distance_dist_sd=1, tfidf_match_vocab=False),
             "predict":dict(source="combined", undersample=False, oversample=False, model_type="lr", class_balance=False)
+        },
+        {
+            "preprocess":preprocess_climate,
+            "vectorize":dict(support=0.005, ner=True, ner_and_regular=False, minimum_flr=10.0, sentiment_distance_dist_sd=1, tfidf_match_vocab=False),
+            "predict":dict(source="combined", undersample=False, oversample=False, model_type="nb", class_balance=False)
         },
         
         # matched tfidf
         {
             "preprocess":preprocess_climate,
-            "vectorize":dict(support=0.01, ner=True, minimum_flr=10.0, sentiment_distance_dist_sd=1, tfidf_match_vocab=True),
+            "vectorize":dict(support=0.01, ner=True, ner_and_regular=False, minimum_flr=10.0, sentiment_distance_dist_sd=1, tfidf_match_vocab=False, tfidf_feature_count=422),
             "predict":dict(source="tfidf", undersample=False, oversample=False, model_type="lr", class_balance=False)
         },
         {
             "preprocess":preprocess_climate,
-            "vectorize":dict(support=0.01, ner=True, minimum_flr=10.0, sentiment_distance_dist_sd=1, tfidf_match_vocab=False, tfidf_feature_count=422),
+            "vectorize":dict(support=0.01, ner=True, ner_and_regular=False, minimum_flr=10.0, sentiment_distance_dist_sd=1, tfidf_match_vocab=False, tfidf_feature_count=422),
+            "predict":dict(source="tfidf", undersample=False, oversample=False, model_type="nb", class_balance=False)
+        },
+        {
+            "preprocess":preprocess_climate,
+            "vectorize":dict(support=0.01, ner=True, ner_and_regular=False, minimum_flr=10.0, sentiment_distance_dist_sd=1, tfidf_match_vocab=True),
             "predict":dict(source="tfidf", undersample=False, oversample=False, model_type="lr", class_balance=False)
+        },
+        {
+            "preprocess":preprocess_climate,
+            "vectorize":dict(support=0.01, ner=True, ner_and_regular=False, minimum_flr=10.0, sentiment_distance_dist_sd=1, tfidf_match_vocab=True),
+            "predict":dict(source="tfidf", undersample=False, oversample=False, model_type="nb", class_balance=False)
+        },
+
+        # ner and regular
+        {
+            "preprocess":preprocess_climate,
+            "vectorize":vectorize_normal_ner_and,
+            "predict":dict(source="as_vec", undersample=False, oversample=False, model_type="lr", class_balance=False)
+        },
+        {
+            "preprocess":preprocess_climate,
+            "vectorize":vectorize_normal_ner_and,
+            "predict":dict(source="as_vec", undersample=False, oversample=False, model_type="nb", class_balance=False)
+        },
+        {
+            "preprocess":preprocess_climate,
+            "vectorize":vectorize_normal_ner_and,
+            "predict":dict(source="combined", undersample=False, oversample=False, model_type="lr", class_balance=False)
+        },
+        {
+            "preprocess":preprocess_climate,
+            "vectorize":vectorize_normal_ner_and,
+            "predict":dict(source="combined", undersample=False, oversample=False, model_type="nb", class_balance=False)
         },
     ]
 
@@ -237,6 +302,7 @@ def preprocess(preprocess_folder, **kwargs):
 # support
 # target_aspect_count (-1)
 # ner (False)
+# ner_and_regular (False)
 # minimum_flr (10.0)
 # sentiment_distance_dist_sd (1)
 # tfidf_feature_count (5000)
@@ -259,7 +325,7 @@ def vectorize(preprocess_folder, vectorize_folder, **kwargs):
 
     as_vec_path = vectorize_folder + "/as_vec"
     
-    aspect_detection.bootstrap.detection.detect(input_path=tokens_folder, output_path=aspect_data_path, support=kwargs.get("support"), target_count=kwargs.get("target_aspect_count", -1), thread_count=THREAD_COUNT, named_entity_recog=kwargs.get("ner", False))
+    aspect_detection.bootstrap.detection.detect(input_path=tokens_folder, output_path=aspect_data_path, support=kwargs.get("support"), target_count=kwargs.get("target_aspect_count", -1), thread_count=THREAD_COUNT, named_entity_recog=kwargs.get("ner", False), ner_and_regular=kwargs.get("ner_and_regular", False))
 
     tfidfify.tfidf(input_path=documents_file, output_path=tfidf_path, feature_count=kwargs.get("tfidf_feature_count", 5000), match_vocab=match_vocab)
 
