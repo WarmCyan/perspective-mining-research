@@ -22,6 +22,7 @@ import sentiment_analysis.as_vec
 import tfidfify
 import combine
 import prediction_model
+import add_lean
 
 
 THREAD_COUNT = 2
@@ -31,12 +32,21 @@ def run(experiment_path, raw_path, cache_path, overwrite=False):
 
 
     preprocess_climate = dict(data_folder=(raw_path+"/kaggle1"), document_count=5000, keywords=["climate change","global warming","climate"], ignore_sources=["CNN","Buzzfeed News"])
-    vectorize_normal = dict(support=0.01, ner=False, ner_and_regular=False, minimum_flr=10.0, sentiment_distance_dist_sd=1, tfidf_match_vocab=False)
-    vectorize_normal_ner = dict(support=0.01, ner=True, ner_and_regular=False, minimum_flr=10.0, sentiment_distance_dist_sd=1, tfidf_match_vocab=False)
-    vectorize_normal_ner_and = dict(support=0.01, ner=True, ner_and_regular=True, minimum_flr=10.0, sentiment_distance_dist_sd=1, tfidf_match_vocab=False)
+    vectorize_normal = dict(support=0.01, ner=False, noun_phrases=True, minimum_flr=10.0, sentiment_distance_dist_sd=1, tfidf_match_vocab=False)
+    vectorize_normal_ner = dict(support=0.01, ner=True, noun_phrases=False, minimum_flr=10.0, sentiment_distance_dist_sd=1, tfidf_match_vocab=False)
+    vectorize_normal_ner_and = dict(support=0.01, ner=True, noun_phrases=True, minimum_flr=10.0, sentiment_distance_dist_sd=1, tfidf_match_vocab=False)
+    vectorize_normal_lean = dict(support=0.01, ner=False, noun_phrases=True, minimum_flr=10.0, sentiment_distance_dist_sd=1, tfidf_match_vocab=False, lean=True)
+    vectorize_normal_ner_lean = dict(support=0.01, ner=True, noun_phrases=False, minimum_flr=10.0, sentiment_distance_dist_sd=1, tfidf_match_vocab=False, lean=True)
+    vectorize_normal_ner_and_lean = dict(support=0.01, ner=True, noun_phrases=True, minimum_flr=10.0, sentiment_distance_dist_sd=1, tfidf_match_vocab=False, lean=True)
 
     
     experiment_list = [
+        {
+            "preprocess":preprocess_climate,
+            "vectorize":dict(support=0.05, ner=False, noun_phrases=True, minimum_flr=10.0, sentiment_distance_dist_sd=1, tfidf_match_vocab=False),
+            "predict":dict(source="as_vec", undersample=False, oversample=False, model_type="lr", class_balance=False)
+        },
+        
         # non-named entity recognition
         {
             "preprocess":preprocess_climate,
@@ -156,6 +166,60 @@ def run(experiment_path, raw_path, cache_path, overwrite=False):
             "vectorize":vectorize_normal_ner_and,
             "predict":dict(source="combined", undersample=False, oversample=False, model_type="nb", class_balance=False)
         },
+
+        # lean
+        {
+            "preprocess":preprocess_climate,
+            "vectorize":vectorize_normal_lean,
+            "predict":dict(source="as_vec", undersample=False, oversample=False, model_type="lr", class_balance=False, lean=True)
+        },
+        {
+            "preprocess":preprocess_climate,
+            "vectorize":vectorize_normal_lean,
+            "predict":dict(source="as_vec", undersample=False, oversample=False, model_type="nb", class_balance=False, lean=True)
+        },
+        {
+            "preprocess":preprocess_climate,
+            "vectorize":vectorize_normal_lean,
+            "predict":dict(source="tfidf", undersample=False, oversample=False, model_type="lr", class_balance=False, lean=True)
+        },
+        {
+            "preprocess":preprocess_climate,
+            "vectorize":vectorize_normal_lean,
+            "predict":dict(source="tfidf", undersample=False, oversample=False, model_type="nb", class_balance=False, lean=True)
+        },
+        {
+            "preprocess":preprocess_climate,
+            "vectorize":vectorize_normal_lean,
+            "predict":dict(source="combined", undersample=False, oversample=False, model_type="lr", class_balance=False, lean=True)
+        },
+        {
+            "preprocess":preprocess_climate,
+            "vectorize":vectorize_normal_lean,
+            "predict":dict(source="combined", undersample=False, oversample=False, model_type="nb", class_balance=False, lean=True)
+        },
+        
+        # ner and lean
+        {
+            "preprocess":preprocess_climate,
+            "vectorize":vectorize_normal_ner_lean,
+            "predict":dict(source="as_vec", undersample=False, oversample=False, model_type="lr", class_balance=False, lean=True)
+        },
+        {
+            "preprocess":preprocess_climate,
+            "vectorize":vectorize_normal_ner_lean,
+            "predict":dict(source="as_vec", undersample=False, oversample=False, model_type="nb", class_balance=False, lean=True)
+        },
+        {
+            "preprocess":preprocess_climate,
+            "vectorize":vectorize_normal_ner_lean,
+            "predict":dict(source="combined", undersample=False, oversample=False, model_type="lr", class_balance=False, lean=True)
+        },
+        {
+            "preprocess":preprocess_climate,
+            "vectorize":vectorize_normal_ner_lean,
+            "predict":dict(source="combined", undersample=False, oversample=False, model_type="nb", class_balance=False, lean=True)
+        },
     ]
 
     preprocess_hashes = {}
@@ -246,7 +310,7 @@ def run(experiment_path, raw_path, cache_path, overwrite=False):
             vectorize_hashes[vectorize_hash] = vectorize_params
 
         # run the vectorizing!
-        vectorize(preprocess_folder, vectorize_folder, **vectorize_params)
+        vectorize(raw_path, preprocess_folder, vectorize_folder, **vectorize_params)
 
         # ---------------------
         # PREDICTING
@@ -302,12 +366,13 @@ def preprocess(preprocess_folder, **kwargs):
 # support
 # target_aspect_count (-1)
 # ner (False)
-# ner_and_regular (False)
+# noun_phrases (True)
 # minimum_flr (10.0)
 # sentiment_distance_dist_sd (1)
 # tfidf_feature_count (5000)
 # tfidf_match_vocab (False)
-def vectorize(preprocess_folder, vectorize_folder, **kwargs):
+# lean (False)
+def vectorize(raw_path, preprocess_folder, vectorize_folder, **kwargs):
     documents_file = preprocess_folder + "/documents.json"
     tokens_folder = preprocess_folder + "/tokens"
 
@@ -323,9 +388,15 @@ def vectorize(preprocess_folder, vectorize_folder, **kwargs):
     if not os.path.isdir(aspect_data_path):
         os.makedirs(aspect_data_path)
 
+    lean = kwargs.get("lean", False)
+
     as_vec_path = vectorize_folder + "/as_vec"
+
+    if add_lean:
+        add_lean.add_lean(input_file=documents_file, output_file=documents_file, bias_file=(raw_path + "/bias_data.json"))
+
     
-    aspect_detection.bootstrap.detection.detect(input_path=tokens_folder, output_path=aspect_data_path, support=kwargs.get("support"), target_count=kwargs.get("target_aspect_count", -1), thread_count=THREAD_COUNT, named_entity_recog=kwargs.get("ner", False), ner_and_regular=kwargs.get("ner_and_regular", False))
+    aspect_detection.bootstrap.detection.detect(input_path=tokens_folder, output_path=aspect_data_path, support=kwargs.get("support"), target_count=kwargs.get("target_aspect_count", -1), thread_count=THREAD_COUNT, named_entity_recog=kwargs.get("ner", False), noun_phrases=kwargs.get("noun_phrases", True))
 
     tfidfify.tfidf(input_path=documents_file, output_path=tfidf_path, feature_count=kwargs.get("tfidf_feature_count", 5000), match_vocab=match_vocab)
 
@@ -339,6 +410,7 @@ def vectorize(preprocess_folder, vectorize_folder, **kwargs):
 # oversample (False)
 # model_type ("lr")
 # class_balance (False)
+# lean (False))
 def predict(preprocess_folder, vectorize_folder, predict_folder, **kwargs):
     documents_file = preprocess_folder + "/documents.json"
 
@@ -351,7 +423,7 @@ def predict(preprocess_folder, vectorize_folder, predict_folder, **kwargs):
     elif source == "combined":
         input_file = vectorize_folder + "/tfidf_as_vec_combined.json"
     
-    score = prediction_model.predict(input_file=input_file, output_path=predict_folder, document_set=documents_file, model_type=kwargs.get("model_type", "lr"), undersample=kwargs.get("undersample", False), oversample=kwargs.get("oversample", False), class_balance=kwargs.get("class_balance", True))
+    score = prediction_model.predict(input_file=input_file, output_path=predict_folder, document_set=documents_file, model_type=kwargs.get("model_type", "lr"), undersample=kwargs.get("undersample", False), oversample=kwargs.get("oversample", False), class_balance=kwargs.get("class_balance", True), predict_lean=kwargs.get("lean", False))
 
 
     return score

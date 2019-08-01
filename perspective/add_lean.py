@@ -32,11 +32,11 @@ def add_lean(input_file, output_file, bias_file):
         doc["lean"] = lean
     
     # write out the file
-    logging.info("Saving document data to '%s'", output_path)
-    with open(output_path, 'w') as outfile:
+    logging.info("Saving document data to '%s'", output_file)
+    with open(output_file, 'w') as outfile:
         json.dump(docs, outfile)
 
-    logging.info("document data saved to '%s'", output_path)
+    logging.info("document data saved to '%s'", output_file)
 
 def parse():
     """Handle all command line argument parsing.

@@ -27,7 +27,7 @@ aspect_data = {}
 named_entities = [] # keep track of these separately in case want to weight more heavily afterwards
 
 
-def detect(input_path, output_path, support=0.0, target_count=-1, thread_count=-1, named_entity_recog=False, ner_and_regular=False, overwrite=False):
+def detect(input_path, output_path, support=0.0, target_count=-1, thread_count=-1, named_entity_recog=False, noun_phrases=True, overwrite=False):
     global aspect_data
     logging.info("Aspect detection requested on tokenized documents '%s'...", input_path)
     logging.info("(Support level: %f)", support)
@@ -55,7 +55,7 @@ def detect(input_path, output_path, support=0.0, target_count=-1, thread_count=-
     with open(sent_doc_path, 'r') as file_in:
         sentence_documents = json.load(file_in)
     
-    if not named_entity_recog or ner_and_regular:
+    if noun_phrases:
         generate_candidates(pos_sentences)
         prune_stopword_candidates()
 
