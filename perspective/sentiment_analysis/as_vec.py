@@ -16,7 +16,7 @@ sys.path.insert(0, os.path.abspath("../../"))
 import utility
 
 
-def evaluate_adjective(adjective):
+def evaluate_adjective(adjective, top_only=False):
     result = [0.0, 0.0, 0.0]
     
     synsets = list(swn.senti_synsets(adjective, 'a'))
@@ -24,12 +24,13 @@ def evaluate_adjective(adjective):
         result[0] += synset.pos_score()
         result[1] += synset.neg_score()
         result[2] += synset.obj_score()
+        if top_only: break
         
     return result
 
 
 # NOTE: expecting an aspects.json, pos.json, sent_doc.json, doc_sent.json
-def create_as_vectors(input_path, tokens_path, output_path, minimum_flr=10.0, sd=1, overwrite=False):
+def create_as_vectors(input_path, tokens_path, output_path, minimum_flr=10.0, sd=1, top_only=False, overwrite=False):
     logging.info("Aspect-sentiment vectors requested for collection at '%s'...", input_path)
 
     nltk.download('sentiwordnet')
@@ -115,7 +116,7 @@ def create_as_vectors(input_path, tokens_path, output_path, minimum_flr=10.0, sd
                         weight = scipy.stats.norm(aspect_index, sd).pdf(left)
                         adjective = sentence[left][0]
                         try:
-                            score = evaluate_adjective(adjective)
+                            score = evaluate_adjective(adjective, top_only)
                             aspect_score[0] += score[0]*weight
                             aspect_score[1] += score[1]*weight
                             aspect_score[2] += score[2]*weight
@@ -132,7 +133,7 @@ def create_as_vectors(input_path, tokens_path, output_path, minimum_flr=10.0, sd
                         weight = scipy.stats.norm(aspect_index, sd).pdf(right)
                         adjective = sentence[right][0]
                         try:
-                            score = evaluate_adjective(adjective)
+                            score = evaluate_adjective(adjective, top_only)
                             aspect_score[0] += score[0]*weight
                             aspect_score[1] += score[1]*weight
                             aspect_score[2] += score[2]*weight

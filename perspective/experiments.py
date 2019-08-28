@@ -30,8 +30,8 @@ THREAD_COUNT = 2
 # in this context overwrite means re-run existing experiments
 def run(experiment_path, raw_path, cache_path, overwrite=False):
 
-
     preprocess_climate = dict(data_folder=(raw_path+"/kaggle1"), document_count=5000, keywords=["climate change","global warming","climate"], ignore_sources=["CNN","Buzzfeed News"])
+    preprocess_all = dict(data_folder=(raw_path+"/kaggle1"), document_count=5000, keywords=[], ignore_sources=["CNN","Buzzfeed News"])
     vectorize_normal = dict(support=0.01, ner=False, noun_phrases=True, minimum_flr=10.0, sentiment_distance_dist_sd=1, tfidf_match_vocab=False)
     vectorize_normal_ner = dict(support=0.01, ner=True, noun_phrases=False, minimum_flr=10.0, sentiment_distance_dist_sd=1, tfidf_match_vocab=False)
     vectorize_normal_ner_and = dict(support=0.01, ner=True, noun_phrases=True, minimum_flr=10.0, sentiment_distance_dist_sd=1, tfidf_match_vocab=False)
@@ -39,188 +39,119 @@ def run(experiment_path, raw_path, cache_path, overwrite=False):
     vectorize_normal_ner_lean = dict(support=0.01, ner=True, noun_phrases=False, minimum_flr=10.0, sentiment_distance_dist_sd=1, tfidf_match_vocab=False, lean=True)
     vectorize_normal_ner_and_lean = dict(support=0.01, ner=True, noun_phrases=True, minimum_flr=10.0, sentiment_distance_dist_sd=1, tfidf_match_vocab=False, lean=True)
 
-    
+
+    def generate_model_type_experiments(experiment_list):
+        new_experiments = {}
+        for experiment in experiment_list:
+            if "model_type" not in experiment["predict"].keys():
+                new_experiment = dict(experiment)
+                experiment["predict"]["model_type"] = "lr"
+                new_experiment["predict"]["model_type"] = "nb"
+                experiment_list.append(new_experiment)
+        return experiment_list
+
+    def generate_source_experiments(experiment_list):
+        new_experiments = {}
+        for experiment in experiment_list:
+            if "source" not in experiment["predict"].keys():
+                new_experiment1 = dict(experiment)
+                new_experiment2 = dict(experiment)
+                experiment["predict"]["source"] = "as_vec"
+                new_experiment1["predict"]["source"] = "tfidf"
+                new_experiment2["predict"]["source"] = "combined"
+                experiment_list.append(new_experiment1)
+                experiment_list.append(new_experiment2)
+        return experiment_list
+
+    def generate_flr_experiments(experiment_list):
+        new_experiments = {}
+        for experiment in experiment_list:
+            if "minimum_flr" not in experiment["vectorize"].keys():
+                new_experiment1 = dict(experiment)
+                experiment["vectorize"]["minimum_flr"] = 10.0
+                new_experiment1["vectorize"]["minimum_flr"] = 100.0
+                experiment_list.append(new_experiment1)
+        return experiment_list
+
+    def generate_sentiment_top_only_experiments(experiment_list):
+        new_experiments = {}
+        for experiment in experiment_list:
+            if "top_only" not in experiment["vectorize"].keys():
+                new_experiment1 = dict(experiment)
+                experiment["vectorize"]["top_only"] = False
+                new_experiment1["vectorize"]["top_only"] = True
+                experiment_list.append(new_experiment1)
+        return experiment_list
+
+    def generate_preprocess(experiment_list):
+        new_experiments = {}
+        for experiment in experiment_list:
+            if "preprocess" not in experiment.keys():
+                new_experiment1 = dict(experiment)
+                experiment["preprocess"] = preprocess_climate
+                new_experiment1["preprocess"] = preprocess_all
+                experiment_list.append(new_experiment1)
+        return experiment_list
+        
+
     experiment_list = [
         {
-            "preprocess":preprocess_climate,
             "vectorize":dict(support=0.05, ner=False, noun_phrases=True, minimum_flr=10.0, sentiment_distance_dist_sd=1, tfidf_match_vocab=False),
-            "predict":dict(source="as_vec", undersample=False, oversample=False, model_type="lr", class_balance=False)
+            "predict":dict(undersample=False, oversample=False, class_balance=False)
         },
         
         # non-named entity recognition
         {
-            "preprocess":preprocess_climate,
             "vectorize":vectorize_normal,
-            "predict":dict(source="as_vec", undersample=False, oversample=False, model_type="lr", class_balance=False)
-        },
-        {
-            "preprocess":preprocess_climate,
-            "vectorize":vectorize_normal,
-            "predict":dict(source="as_vec", undersample=False, oversample=False, model_type="nb", class_balance=False)
-        },
-        {
-            "preprocess":preprocess_climate,
-            "vectorize":vectorize_normal,
-            "predict":dict(source="tfidf", undersample=False, oversample=False, model_type="lr", class_balance=False)
-        },
-        {
-            "preprocess":preprocess_climate,
-            "vectorize":vectorize_normal,
-            "predict":dict(source="tfidf", undersample=False, oversample=False, model_type="nb", class_balance=False)
-        },
-        {
-            "preprocess":preprocess_climate,
-            "vectorize":vectorize_normal,
-            "predict":dict(source="combined", undersample=False, oversample=False, model_type="lr", class_balance=False)
-        },
-        {
-            "preprocess":preprocess_climate,
-            "vectorize":vectorize_normal,
-            "predict":dict(source="combined", undersample=False, oversample=False, model_type="nb", class_balance=False)
+            "predict":dict(undersample=False, oversample=False, class_balance=False)
         },
 
         # named entity recognition
         {
-            "preprocess":preprocess_climate,
             "vectorize":vectorize_normal_ner,
-            "predict":dict(source="as_vec", undersample=False, oversample=False, model_type="lr", class_balance=False)
-        },
-        {
-            "preprocess":preprocess_climate,
-            "vectorize":vectorize_normal_ner,
-            "predict":dict(source="as_vec", undersample=False, oversample=False, model_type="nb", class_balance=False)
-        },
-        {
-            "preprocess":preprocess_climate,
-            "vectorize":vectorize_normal_ner,
-            "predict":dict(source="combined", undersample=False, oversample=False, model_type="lr", class_balance=False)
-        },
-        {
-            "preprocess":preprocess_climate,
-            "vectorize":vectorize_normal_ner,
-            "predict":dict(source="combined", undersample=False, oversample=False, model_type="nb", class_balance=False)
+            "predict":dict(undersample=False, oversample=False, class_balance=False)
         },
         
         # lower support
         {
-            "preprocess":preprocess_climate,
-            "vectorize":dict(support=0.005, ner=True, ner_and_regular=False,  minimum_flr=10.0, sentiment_distance_dist_sd=1, tfidf_match_vocab=False),
-            "predict":dict(source="as_vec", undersample=False, oversample=False, model_type="lr", class_balance=False)
-        },
-        {
-            "preprocess":preprocess_climate,
-            "vectorize":dict(support=0.005, ner=True, ner_and_regular=False,  minimum_flr=10.0, sentiment_distance_dist_sd=1, tfidf_match_vocab=False),
-            "predict":dict(source="as_vec", undersample=False, oversample=False, model_type="nb", class_balance=False)
-        },
-        {
-            "preprocess":preprocess_climate,
-            "vectorize":dict(support=0.005, ner=True, ner_and_regular=False, minimum_flr=10.0, sentiment_distance_dist_sd=1, tfidf_match_vocab=False),
-            "predict":dict(source="combined", undersample=False, oversample=False, model_type="lr", class_balance=False)
-        },
-        {
-            "preprocess":preprocess_climate,
-            "vectorize":dict(support=0.005, ner=True, ner_and_regular=False, minimum_flr=10.0, sentiment_distance_dist_sd=1, tfidf_match_vocab=False),
-            "predict":dict(source="combined", undersample=False, oversample=False, model_type="nb", class_balance=False)
+            "vectorize":dict(support=0.005, ner=True, noun_phrases=False,  minimum_flr=10.0, sentiment_distance_dist_sd=1, tfidf_match_vocab=False),
+            "predict":dict(undersample=False, oversample=False, class_balance=False)
         },
         
         # matched tfidf
         {
-            "preprocess":preprocess_climate,
-            "vectorize":dict(support=0.01, ner=True, ner_and_regular=False, minimum_flr=10.0, sentiment_distance_dist_sd=1, tfidf_match_vocab=False, tfidf_feature_count=422),
-            "predict":dict(source="tfidf", undersample=False, oversample=False, model_type="lr", class_balance=False)
+            "vectorize":dict(support=0.01, ner=True, noun_phrases=False, minimum_flr=10.0, sentiment_distance_dist_sd=1, tfidf_match_vocab=False, tfidf_feature_count=422),
+            "predict":dict(source="tfidf", undersample=False, oversample=False, class_balance=False)
         },
         {
-            "preprocess":preprocess_climate,
-            "vectorize":dict(support=0.01, ner=True, ner_and_regular=False, minimum_flr=10.0, sentiment_distance_dist_sd=1, tfidf_match_vocab=False, tfidf_feature_count=422),
-            "predict":dict(source="tfidf", undersample=False, oversample=False, model_type="nb", class_balance=False)
-        },
-        {
-            "preprocess":preprocess_climate,
-            "vectorize":dict(support=0.01, ner=True, ner_and_regular=False, minimum_flr=10.0, sentiment_distance_dist_sd=1, tfidf_match_vocab=True),
-            "predict":dict(source="tfidf", undersample=False, oversample=False, model_type="lr", class_balance=False)
-        },
-        {
-            "preprocess":preprocess_climate,
-            "vectorize":dict(support=0.01, ner=True, ner_and_regular=False, minimum_flr=10.0, sentiment_distance_dist_sd=1, tfidf_match_vocab=True),
-            "predict":dict(source="tfidf", undersample=False, oversample=False, model_type="nb", class_balance=False)
+            "vectorize":dict(support=0.01, ner=True, noun_phrases=False, minimum_flr=10.0, sentiment_distance_dist_sd=1, tfidf_match_vocab=True),
+            "predict":dict(source="tfidf", undersample=False, oversample=False, class_balance=False)
         },
 
         # ner and regular
         {
-            "preprocess":preprocess_climate,
             "vectorize":vectorize_normal_ner_and,
-            "predict":dict(source="as_vec", undersample=False, oversample=False, model_type="lr", class_balance=False)
-        },
-        {
-            "preprocess":preprocess_climate,
-            "vectorize":vectorize_normal_ner_and,
-            "predict":dict(source="as_vec", undersample=False, oversample=False, model_type="nb", class_balance=False)
-        },
-        {
-            "preprocess":preprocess_climate,
-            "vectorize":vectorize_normal_ner_and,
-            "predict":dict(source="combined", undersample=False, oversample=False, model_type="lr", class_balance=False)
-        },
-        {
-            "preprocess":preprocess_climate,
-            "vectorize":vectorize_normal_ner_and,
-            "predict":dict(source="combined", undersample=False, oversample=False, model_type="nb", class_balance=False)
+            "predict":dict(undersample=False, oversample=False, class_balance=False)
         },
 
         # lean
         {
-            "preprocess":preprocess_climate,
             "vectorize":vectorize_normal_lean,
-            "predict":dict(source="as_vec", undersample=False, oversample=False, model_type="lr", class_balance=False, lean=True)
-        },
-        {
-            "preprocess":preprocess_climate,
-            "vectorize":vectorize_normal_lean,
-            "predict":dict(source="as_vec", undersample=False, oversample=False, model_type="nb", class_balance=False, lean=True)
-        },
-        {
-            "preprocess":preprocess_climate,
-            "vectorize":vectorize_normal_lean,
-            "predict":dict(source="tfidf", undersample=False, oversample=False, model_type="lr", class_balance=False, lean=True)
-        },
-        {
-            "preprocess":preprocess_climate,
-            "vectorize":vectorize_normal_lean,
-            "predict":dict(source="tfidf", undersample=False, oversample=False, model_type="nb", class_balance=False, lean=True)
-        },
-        {
-            "preprocess":preprocess_climate,
-            "vectorize":vectorize_normal_lean,
-            "predict":dict(source="combined", undersample=False, oversample=False, model_type="lr", class_balance=False, lean=True)
-        },
-        {
-            "preprocess":preprocess_climate,
-            "vectorize":vectorize_normal_lean,
-            "predict":dict(source="combined", undersample=False, oversample=False, model_type="nb", class_balance=False, lean=True)
+            "predict":dict(undersample=False, oversample=False, class_balance=False, lean=True)
         },
         
         # ner and lean
         {
-            "preprocess":preprocess_climate,
             "vectorize":vectorize_normal_ner_lean,
-            "predict":dict(source="as_vec", undersample=False, oversample=False, model_type="lr", class_balance=False, lean=True)
-        },
-        {
-            "preprocess":preprocess_climate,
-            "vectorize":vectorize_normal_ner_lean,
-            "predict":dict(source="as_vec", undersample=False, oversample=False, model_type="nb", class_balance=False, lean=True)
-        },
-        {
-            "preprocess":preprocess_climate,
-            "vectorize":vectorize_normal_ner_lean,
-            "predict":dict(source="combined", undersample=False, oversample=False, model_type="lr", class_balance=False, lean=True)
-        },
-        {
-            "preprocess":preprocess_climate,
-            "vectorize":vectorize_normal_ner_lean,
-            "predict":dict(source="combined", undersample=False, oversample=False, model_type="nb", class_balance=False, lean=True)
+            "predict":dict(undersample=False, oversample=False, class_balance=False, lean=True)
         },
     ]
+
+    experiment_list = generate_source_experiments(experiment_list)
+    experiment_list = generate_model_type_experiments(experiment_list)
+    experiment_list = generate_flr_experiments(experiment_list)
+    experiment_list = generate_sentiment_top_only_experiments(experiment_list)
+    experiment_list = generate_preprocess(experiment_list)
 
     preprocess_hashes = {}
     vectorize_hashes = {}
@@ -241,7 +172,7 @@ def run(experiment_path, raw_path, cache_path, overwrite=False):
     for experiment in experiment_list:
         index += 1
         logging.info("################################################")
-        logging.info("Starting experiment %i - %s", index, json.dumps(experiment))
+        logging.info("Starting experiment %i/%i - %s", index, len(experiment_list), json.dumps(experiment))
         logging.info("################################################")
 
         # get experiment parameter hashes
@@ -369,6 +300,7 @@ def preprocess(preprocess_folder, **kwargs):
 # noun_phrases (True)
 # minimum_flr (10.0)
 # sentiment_distance_dist_sd (1)
+# top_only (False)
 # tfidf_feature_count (5000)
 # tfidf_match_vocab (False)
 # lean (False)
@@ -400,7 +332,7 @@ def vectorize(raw_path, preprocess_folder, vectorize_folder, **kwargs):
 
     tfidfify.tfidf(input_path=documents_file, output_path=tfidf_path, feature_count=kwargs.get("tfidf_feature_count", 5000), match_vocab=match_vocab)
 
-    sentiment_analysis.as_vec.create_as_vectors(input_path=aspect_data_path, tokens_path=tokens_folder, output_path=as_vec_path, minimum_flr=kwargs.get("minimum_flr", 10.0), sd=kwargs.get("sentiment_distance_dist_sd", 1))
+    sentiment_analysis.as_vec.create_as_vectors(input_path=aspect_data_path, tokens_path=tokens_folder, output_path=as_vec_path, minimum_flr=kwargs.get("minimum_flr", 10.0), sd=kwargs.get("sentiment_distance_dist_sd", 1), top_only=kwargs.get("top_only", False))
 
     combine.combine(input_file_1=tfidf_path, input_file_2=(as_vec_path + "/doc_as_vectors.json"), output_file=(vectorize_folder + "/tfidf_as_vec_combined.json"))
     
