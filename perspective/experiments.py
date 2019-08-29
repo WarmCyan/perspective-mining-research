@@ -41,56 +41,72 @@ def run(experiment_path, raw_path, cache_path, overwrite=False):
 
 
     def generate_model_type_experiments(experiment_list):
-        new_experiments = {}
+        new_experiments = []
         for experiment in experiment_list:
             if "model_type" not in experiment["predict"].keys():
-                new_experiment = dict(experiment)
-                experiment["predict"]["model_type"] = "lr"
-                new_experiment["predict"]["model_type"] = "nb"
-                experiment_list.append(new_experiment)
+                new_experiment1 = experiment.copy()
+                new_experiment2 = experiment.copy()
+                #experiment["predict"]["model_type"] = "lr"
+                new_experiment1["predict"]["model_type"] = "nb"
+                new_experiment2["predict"]["model_type"] = "lr"
+                new_experiments.append(new_experiment1)
+                new_experiments.append(new_experiment2)
+        experiment_list.extend(new_experiments)
         return experiment_list
 
     def generate_source_experiments(experiment_list):
-        new_experiments = {}
+        new_experiments = []
         for experiment in experiment_list:
             if "source" not in experiment["predict"].keys():
-                new_experiment1 = dict(experiment)
-                new_experiment2 = dict(experiment)
-                experiment["predict"]["source"] = "as_vec"
+                new_experiment1 = experiment.copy()
+                new_experiment2 = experiment.copy()
+                new_experiment3 = experiment.copy()
+                #experiment["predict"]["source"] = "as_vec"
                 new_experiment1["predict"]["source"] = "tfidf"
                 new_experiment2["predict"]["source"] = "combined"
-                experiment_list.append(new_experiment1)
-                experiment_list.append(new_experiment2)
+                new_experiment3["predict"]["source"] = "as_vec"
+                new_experiments.append(new_experiment1)
+                new_experiments.append(new_experiment2)
+                new_experiments.append(new_experiment3)
+        experiment_list.extend(new_experiments)
         return experiment_list
 
     def generate_flr_experiments(experiment_list):
-        new_experiments = {}
+        new_experiments = []
         for experiment in experiment_list:
             if "minimum_flr" not in experiment["vectorize"].keys():
-                new_experiment1 = dict(experiment)
-                experiment["vectorize"]["minimum_flr"] = 10.0
+                new_experiment1 = experiment.copy()
+                new_experiment2 = experiment.copy()
+                #experiment["vectorize"]["minimum_flr"] = 10.0
                 new_experiment1["vectorize"]["minimum_flr"] = 100.0
-                experiment_list.append(new_experiment1)
+                new_experiment2["vectorize"]["minimum_flr"] = 10.0
+                new_experiments.append(new_experiment1)
+                new_experiments.append(new_experiment2)
+        experiment_list.extend(new_experiments)
         return experiment_list
 
     def generate_sentiment_top_only_experiments(experiment_list):
-        new_experiments = {}
+        new_experiments = []
         for experiment in experiment_list:
             if "top_only" not in experiment["vectorize"].keys():
-                new_experiment1 = dict(experiment)
+                new_experiment1 = experiment.copy()
+                new_experiment2 = experiment.copy()
                 experiment["vectorize"]["top_only"] = False
                 new_experiment1["vectorize"]["top_only"] = True
-                experiment_list.append(new_experiment1)
+                new_experiment2["vectorize"]["top_only"] = False
+                new_experiments.append(new_experiment2)
+        experiment_list.extend(new_experiments)
         return experiment_list
 
     def generate_preprocess(experiment_list):
-        new_experiments = {}
+        new_experiments = []
         for experiment in experiment_list:
             if "preprocess" not in experiment.keys():
-                new_experiment1 = dict(experiment)
+                new_experiment1 = experiment.copy()
                 experiment["preprocess"] = preprocess_climate
                 new_experiment1["preprocess"] = preprocess_all
-                experiment_list.append(new_experiment1)
+                new_experiments.append(new_experiment1)
+        experiment_list.extend(new_experiments)
         return experiment_list
         
 
