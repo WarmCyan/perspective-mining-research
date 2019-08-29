@@ -65,11 +65,14 @@ def tokenize(input_file, output_path, count=-1, overwrite=False):
     #return pos_sentences, sentences, document_sentences, sentence_documents
     
     pos_path = output_path + "/pos.json"
+    sentences_path = output_path + "/sentences.json"
     doc_sent_path = output_path + "/doc_sent.json"
     sent_doc_path = output_path + "/sent_doc.json"
     logging.info("Saving tokenization information...")
     with open(pos_path, 'w') as file_out:
         json.dump(pos_sentences, file_out)
+    with open(sentences_path, 'w') as file_out:
+        json.dump(sentences, file_out)
     with open(doc_sent_path, 'w') as file_out:
         json.dump(document_sentences, file_out)
     with open(sent_doc_path, 'w') as file_out:

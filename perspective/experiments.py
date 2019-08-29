@@ -28,7 +28,7 @@ import add_lean
 THREAD_COUNT = 2
 
 # in this context overwrite means re-run existing experiments
-def run(experiment_path, raw_path, cache_path, overwrite=False):
+def run(experiment_path, raw_path, cache_path, manual=False, overwrite=False):
 
     preprocess_climate = dict(data_folder=(raw_path+"/kaggle1"), document_count=5000, keywords=["climate change","global warming","climate"], ignore_sources=["CNN","Buzzfeed News"])
     preprocess_all = dict(data_folder=(raw_path+"/kaggle1"), document_count=5000, keywords=[], ignore_sources=["CNN","Buzzfeed News"])
@@ -38,6 +38,19 @@ def run(experiment_path, raw_path, cache_path, overwrite=False):
     vectorize_normal_lean = dict(support=0.01, ner=False, noun_phrases=True, minimum_flr=10.0, sentiment_distance_dist_sd=1, tfidf_match_vocab=False, lean=True)
     vectorize_normal_ner_lean = dict(support=0.01, ner=True, noun_phrases=False, minimum_flr=10.0, sentiment_distance_dist_sd=1, tfidf_match_vocab=False, lean=True)
     vectorize_normal_ner_and_lean = dict(support=0.01, ner=True, noun_phrases=True, minimum_flr=10.0, sentiment_distance_dist_sd=1, tfidf_match_vocab=False, lean=True)
+
+
+    def manual_experiment():
+        experiments = [
+                {
+                    "preprocess": preprocess_climate,
+                    "vectorize": vectorize_normal_ner,
+                    "predict":dict(undersample=False, oversample=False, class_balance=False, model_type="lr")
+                }
+            ]
+        return experiments
+
+    
 
 
     def generate_model_type_experiments(experiment_list):
@@ -168,6 +181,10 @@ def run(experiment_path, raw_path, cache_path, overwrite=False):
     experiment_list = generate_flr_experiments(experiment_list)
     experiment_list = generate_sentiment_top_only_experiments(experiment_list)
     experiment_list = generate_preprocess(experiment_list)
+
+    # NOTE: this just runs whatever are in the manual experiments
+    if manual:
+        experiment_list = manual_experiment()
 
     preprocess_hashes = {}
     vectorize_hashes = {}
@@ -385,6 +402,13 @@ def parse():
     """
     parser = argparse.ArgumentParser()
     parser = utility.add_common_parsing(parser)
+    
+    parser.add_argument(
+        "--manual",
+        dest="manual",
+        action="store_true",
+        help="Specify this flag to predict lean instead of source",
+    )
 
     cmd_args = parser.parse_args()
     return cmd_args
@@ -394,4 +418,4 @@ if __name__ == "__main__":
     utility.init_logging(ARGS.log_path)
     raw_path, cache_path = utility.fix_paths(ARGS.experiment_path, ARGS.input_path, ARGS.output_path)
 
-    run(ARGS.experiment_path, raw_path, cache_path, ARGS.overwrite)
+    run(ARGS.experiment_path, raw_path, cache_path, ARGS.manual, ARGS.overwrite)
