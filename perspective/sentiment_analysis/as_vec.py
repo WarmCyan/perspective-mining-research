@@ -30,7 +30,7 @@ def evaluate_adjective(adjective, top_only=False):
 
 
 # NOTE: expecting an aspects.json, pos.json, sent_doc.json, doc_sent.json
-def create_as_vectors(input_path, tokens_path, output_path, minimum_flr=10.0, sd=1, top_only=False, overwrite=False):
+def create_as_vectors(input_path, tokens_path, output_path, minimum_flr=10.0, sd=1, top_only=False, include_neutral=True, overwrite=False):
     logging.info("Aspect-sentiment vectors requested for collection at '%s'...", input_path)
 
     nltk.download('sentiwordnet')
@@ -119,7 +119,7 @@ def create_as_vectors(input_path, tokens_path, output_path, minimum_flr=10.0, sd
                             score = evaluate_adjective(adjective, top_only)
                             aspect_score[0] += score[0]*weight
                             aspect_score[1] += score[1]*weight
-                            aspect_score[2] += score[2]*weight
+                            if include_neutral: aspect_score[2] += score[2]*weight
                             #score = swn.senti_synset(adjective + ".a.01")
                             #aspect_score[0] += score.pos_score()*weight
                             #aspect_score[1] += score.neg_score()*weight
@@ -136,7 +136,7 @@ def create_as_vectors(input_path, tokens_path, output_path, minimum_flr=10.0, sd
                             score = evaluate_adjective(adjective, top_only)
                             aspect_score[0] += score[0]*weight
                             aspect_score[1] += score[1]*weight
-                            aspect_score[2] += score[2]*weight
+                            if include_neutral: aspect_score[2] += score[2]*weight
                             #score = swn.senti_synset(adjective + ".a.01")
                             #aspect_score[0] += score.pos_score()*weight
                             #aspect_score[1] += score.neg_score()*weight
@@ -162,7 +162,7 @@ def create_as_vectors(input_path, tokens_path, output_path, minimum_flr=10.0, sd
 
             doc_as_vectors[sentence_doc][as_index] += aspect_score[0]
             doc_as_vectors[sentence_doc][as_index + num_aspects] += aspect_score[1]
-            doc_as_vectors[sentence_doc][as_index + num_aspects*2] += aspect_score[2]
+            if include_neutral: doc_as_vectors[sentence_doc][as_index + num_aspects*2] += aspect_score[2]
 
             
             #if aspect_score[0] > aspect_score[1]:

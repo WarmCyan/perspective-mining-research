@@ -7,6 +7,7 @@ import json
 import shutil
 import os
 import datetime
+import copy
 
 import hashlib
 
@@ -50,75 +51,57 @@ def run(experiment_path, raw_path, cache_path, manual=False, overwrite=False):
             ]
         return experiments
 
-    
-
 
     def generate_model_type_experiments(experiment_list):
         new_experiments = []
         for experiment in experiment_list:
-            if "model_type" not in experiment["predict"].keys():
-                new_experiment1 = experiment.copy()
-                new_experiment2 = experiment.copy()
-                #experiment["predict"]["model_type"] = "lr"
-                new_experiment1["predict"]["model_type"] = "nb"
-                new_experiment2["predict"]["model_type"] = "lr"
-                new_experiments.append(new_experiment1)
-                new_experiments.append(new_experiment2)
+            new_experiment1 = copy.deepcopy(experiment)
+            experiment["predict"]["model_type"] = "lr"
+            new_experiment1["predict"]["model_type"] = "nb"
+            new_experiments.append(new_experiment1)
         experiment_list.extend(new_experiments)
         return experiment_list
 
     def generate_source_experiments(experiment_list):
         new_experiments = []
         for experiment in experiment_list:
-            if "source" not in experiment["predict"].keys():
-                new_experiment1 = experiment.copy()
-                new_experiment2 = experiment.copy()
-                new_experiment3 = experiment.copy()
-                #experiment["predict"]["source"] = "as_vec"
-                new_experiment1["predict"]["source"] = "tfidf"
-                new_experiment2["predict"]["source"] = "combined"
-                new_experiment3["predict"]["source"] = "as_vec"
-                new_experiments.append(new_experiment1)
-                new_experiments.append(new_experiment2)
-                new_experiments.append(new_experiment3)
+            new_experiment1 = copy.deepcopy(experiment)
+            new_experiment2 = copy.deepcopy(experiment)
+            experiment["predict"]["source"] = "as_vec"
+            new_experiment1["predict"]["source"] = "tfidf"
+            new_experiment2["predict"]["source"] = "combined"
+            new_experiments.append(new_experiment1)
+            new_experiments.append(new_experiment2)
         experiment_list.extend(new_experiments)
         return experiment_list
 
     def generate_flr_experiments(experiment_list):
         new_experiments = []
         for experiment in experiment_list:
-            if "minimum_flr" not in experiment["vectorize"].keys():
-                new_experiment1 = experiment.copy()
-                new_experiment2 = experiment.copy()
-                #experiment["vectorize"]["minimum_flr"] = 10.0
-                new_experiment1["vectorize"]["minimum_flr"] = 100.0
-                new_experiment2["vectorize"]["minimum_flr"] = 10.0
-                new_experiments.append(new_experiment1)
-                new_experiments.append(new_experiment2)
+            new_experiment1 = copy.deepcopy(experiment)
+            experiment["vectorize"]["minimum_flr"] = 10.0
+            new_experiment1["vectorize"]["minimum_flr"] = 100.0
+            new_experiments.append(new_experiment1)
         experiment_list.extend(new_experiments)
         return experiment_list
 
     def generate_sentiment_top_only_experiments(experiment_list):
         new_experiments = []
         for experiment in experiment_list:
-            if "top_only" not in experiment["vectorize"].keys():
-                new_experiment1 = experiment.copy()
-                new_experiment2 = experiment.copy()
-                experiment["vectorize"]["top_only"] = False
-                new_experiment1["vectorize"]["top_only"] = True
-                new_experiment2["vectorize"]["top_only"] = False
-                new_experiments.append(new_experiment2)
+            new_experiment1 = copy.deepcopy(experiment)
+            experiment["vectorize"]["top_only"] = False
+            new_experiment1["vectorize"]["top_only"] = True
+            new_experiments.append(new_experiment1)
         experiment_list.extend(new_experiments)
         return experiment_list
 
     def generate_preprocess(experiment_list):
         new_experiments = []
         for experiment in experiment_list:
-            if "preprocess" not in experiment.keys():
-                new_experiment1 = experiment.copy()
-                experiment["preprocess"] = preprocess_climate
-                new_experiment1["preprocess"] = preprocess_all
-                new_experiments.append(new_experiment1)
+            new_experiment1 = copy.deepcopy(experiment)
+            experiment["preprocess"] = preprocess_climate
+            new_experiment1["preprocess"] = preprocess_all
+            new_experiments.append(new_experiment1)
         experiment_list.extend(new_experiments)
         return experiment_list
         
@@ -143,7 +126,7 @@ def run(experiment_path, raw_path, cache_path, manual=False, overwrite=False):
         
         # lower support
         {
-            "vectorize":dict(support=0.005, ner=True, noun_phrases=False,  minimum_flr=10.0, sentiment_distance_dist_sd=1, tfidf_match_vocab=False),
+            "vectorize":dict(support=0.005, ner=True, noun_phrases=False, minimum_flr=10.0, sentiment_distance_dist_sd=1, tfidf_match_vocab=False),
             "predict":dict(undersample=False, oversample=False, class_balance=False)
         },
         
@@ -168,12 +151,18 @@ def run(experiment_path, raw_path, cache_path, manual=False, overwrite=False):
             "vectorize":vectorize_normal_lean,
             "predict":dict(undersample=False, oversample=False, class_balance=False, lean=True)
         },
-        
+
         # ner and lean
         {
             "vectorize":vectorize_normal_ner_lean,
             "predict":dict(undersample=False, oversample=False, class_balance=False, lean=True)
         },
+
+        # include objectivity or not
+        {
+            "vectorize":dict(support=0.005, ner=True, noun_phrases=False, include_neutral=False),
+            "predict":dict(undersample=False, oversample=False, class_balance=False, lean=True)
+        }
     ]
 
     experiment_list = generate_source_experiments(experiment_list)
@@ -181,6 +170,11 @@ def run(experiment_path, raw_path, cache_path, manual=False, overwrite=False):
     experiment_list = generate_flr_experiments(experiment_list)
     experiment_list = generate_sentiment_top_only_experiments(experiment_list)
     experiment_list = generate_preprocess(experiment_list)
+
+    index = 0
+    for experiment in experiment_list:
+        print(index, "-", experiment)
+        index += 1
 
     # NOTE: this just runs whatever are in the manual experiments
     if manual:
